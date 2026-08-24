@@ -1,0 +1,32 @@
+#!/usr/bin/expect -f
+# 헤드리스로 QEMU 부팅 -> 게스트에서 LAB_CMD 실행 -> 종료.
+# qemu-check.exp(xtest 전용)를 내 명령 실행용으로 줄인 것.
+set timeout 300
+set cmd $env(LAB_CMD)
+
+log_file -a -noappend "serial0.log"
+open "serial1.log" "w+"
+spawn sh -c "$::env(QEMU) $::env(QEMU_CHECK_ARGS)"
+
+expect {
+	"Kernel panic"	{ puts "\n!!! kernel panic"; exit 1 }
+	timeout		{ puts "\n!!! boot timeout"; exit 2 }
+	"ogin:"
+}
+send -- "root\r"
+expect "# "
+send -- "export LD_LIBRARY_PATH=/lib:/lib/arm-linux-gnueabihf\r"
+expect "# "
+
+puts "\n--- guest: $cmd ---"
+send -- "$cmd; echo LAB_EXIT=\$?\r"
+set rc 99
+expect {
+	-re {LAB_EXIT=(\d+)}	{ set rc $expect_out(1,string) }
+	timeout			{ puts "\n!!! command timeout"; exit 2 }
+}
+expect "# "
+send -- "poweroff -f\r"
+set timeout 20
+expect eof
+exit $rc
