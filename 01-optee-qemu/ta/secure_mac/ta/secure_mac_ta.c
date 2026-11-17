@@ -27,8 +27,27 @@ struct mac_ctx {
  */
 static TEE_Result gen_key(struct mac_ctx *ctx)
 {
-	(void)ctx;
-	return TEE_ERROR_NOT_IMPLEMENTED;
+	TEE_Result rst = TEE_ERROR_GENERIC;
+	TEE_ObjectHandle obj = TEE_HANDLE_NULL;
+
+	rst = TEE_AllocateTransientObject(TEE_TYPE_HMAC_SHA256, SECURE_MAC_KEY_BITS, &obj);
+	if (rst != TEE_SUCCESS) {
+		return rst;
+	}
+
+	rst = TEE_GenerateKey(obj, SECURE_MAC_KEY_BITS, NULL, 0);
+	if (rst != TEE_SUCCESS) {
+		TEE_FreeTransientObject(obj);
+		return rst;
+	}
+
+	TEE_RestrictObjectUsage(obj, TEE_USAGE_MAC);
+	if (ctx->key != TEE_HANDLE_NULL){
+		TEE_FreeTransientObject(ctx->key);
+	}
+
+	ctx->key = obj;
+	return rst;
 }
 
 /*
@@ -52,9 +71,32 @@ static TEE_Result gen_key(struct mac_ctx *ctx)
 static TEE_Result mac_do(struct mac_ctx *ctx, const void *msg, size_t msg_len,
 			 void *tag, uint32_t *tag_len, bool compare)
 {
-	(void)ctx; (void)msg; (void)msg_len;
-	(void)tag; (void)tag_len; (void)compare;
-	return TEE_ERROR_NOT_IMPLEMENTED;
+	TEE_Result rst = TEE_ERROR_GENERIC;
+	TEE_OperationHandle op = TEE_HANDLE_NULL;
+
+	rst = TEE_AllocateOperation(&op, TEE_ALG_HMAC_SHA256, TEE_MODE_MAC,
+				SECURE_MAC_KEY_BITS);
+	if (rst != TEE_SUCCESS) {
+		return rst;
+	}
+
+	rst = TEE_SetOperationKey(op, ctx->key);
+	if (rst != TEE_SUCCESS) {
+		TEE_FreeOperation(op);
+		return rst;
+	}
+
+	TEE_MACInit(op, NULL, 0);
+
+	TEE_MACUpdate(op, msg, msg_len);
+	if (compare == false) {
+		rst = TEE_MACComputeFinal(op, NULL, 0, tag, tag_len);
+	} else {
+		rst = TEE_MACCompareFinal(op, NULL, 0, tag, *tag_len);
+	}
+
+	TEE_FreeOperation(op);
+	return rst;
 }
 
 /* ---- 여기서부터는 배관(Claude): 파라미터 검사와 디스패치 ---- */
