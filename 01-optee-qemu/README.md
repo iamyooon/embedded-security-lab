@@ -11,10 +11,13 @@ ARM TrustZone 기반 TEE를 QEMU(`qemu_v8`)에서 부팅하고, **직접 Trusted
 
 ## 위협모델 (← 내가 작성한다: 규칙 2)
 > 여기에 직접 채워넣기:
-> - 무엇을 지키나 (자산):
-> - 공격자 능력 (예: normal-world Linux를 root로 장악):
+> - 무엇을 지키나 (자산): 키(기밀성), mac을 계산하는 판정로직(무결성), freshness 카운터(무결성)
+> - 공격자 능력 (예: normal-world Linux를 root로 장악): normal world root이고 ta에 임의명령,입력을 보내고, normal world 메모리를 읽고 쓸수있음. ca교체 가능, 물리공격,부팅체인 변조는 가정안함
 > - TEE가 막는 것 / 못 막는 것 (물리공격·TA버그·깨진 부팅체인):
+>   - 막는것) 키빼내는것, 키없이 mac을 만드는 것
+>   - 못막는것) 키를 쓰게 만드는것(ta가 호출자를 구분하지 않음), 재전송(카운터를 ca가 관리), dos공격(root가 ca,ta 호출자체를 막을수있음), ta버그(tee는 ta코드의 실수는 못막음)
 > - 무엇이 깨지면 실패로 보나:
+>   - export_key가 키를 돌려줌, 변조프레임 verify가 valid=1
 
 ## 배경지식
 - [notes/00-trustzone-primer.md](notes/00-trustzone-primer.md) — TrustZone·OP-TEE 개념 프라이머
