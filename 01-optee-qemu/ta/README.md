@@ -19,7 +19,7 @@ MAC -> 정상검증(valid=1) -> 1바이트 변조 후 재검증(valid=0) -> 키 
 1. `gen_key()` — AllocateTransientObject -> GenerateKey -> RestrictObjectUsage
 2. `mac_do()` — AllocateOperation -> SetOperationKey -> MACInit/Update -> ComputeFinal 또는 CompareFinal
 
-참고 구현: `/data/optee/optee_examples/hotp/ta/hotp_ta.c` 의 `hmac_sha1()` (6단계 주석).
+참고 구현: `<리포>/optee/optee_examples/hotp/ta/hotp_ta.c` 의 `hmac_sha1()` (6단계 주석).
 길이 인자가 `size_t` 가 아니라 `uint32_t` 인 이유는 `ta/Makefile` 의 `CFG_TA_OPTEE_CORE_API_COMPAT_1_1=y`(GP 1.1 시그니처).
 
 ## 빌드 · 실행
@@ -28,7 +28,7 @@ MAC -> 정상검증(valid=1) -> 1바이트 변조 후 재검증(valid=0) -> 키 
 ../build/run-secure-mac.sh build    # 빌드만
 ../build/run-secure-mac.sh run      # 실행만
 ```
-- 소스는 `/data/optee/optee_examples/secure_mac/` 로 rsync 되고 buildroot 가 TA(`/lib/optee_armtz/<uuid>.ta`)와
+- 소스는 `<리포>/optee/optee_examples/secure_mac/` 로 rsync 되고 buildroot 가 TA(`/lib/optee_armtz/<uuid>.ta`)와
   CA(`/usr/bin/optee_example_secure_mac`)를 rootfs 에 넣는다.
 - 실행은 `build/lab-run.exp`(qemu-check.exp 를 내 명령용으로 축소) + `build/lab-run.mk`.
 
@@ -40,5 +40,5 @@ secure world 로그: I/TA: secure_mac: session opened / closed
 -> TA 서명·설치·세션 오픈·world switch 까지는 동작. 이제 TODO 2개를 채우면 진짜 MAC 이 나온다.
 
 ## 함정 메모
-- `/data/optee` 를 **root 로 빌드하면 소유권이 섞여** 다음 빌드가 깨진다(cmake relink 실패).
+- `<리포>/optee` 를 **root 로 빌드하면 소유권이 섞여** 다음 빌드가 깨진다(cmake relink 실패).
   항상 컨테이너를 `-u 1000:1000` 으로 띄운다(`run-secure-mac.sh` 가 그렇게 한다).

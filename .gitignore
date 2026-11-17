@@ -1,4 +1,4 @@
-# 대용량 빌드 산출물은 /data/optee 등에 두고 추적하지 않는다.
+# 대용량 빌드 산출물(OP-TEE 트리 optee/ 등)은 추적하지 않는다.
 # 이 repo엔 코드·절차·writeup·결과 캡처만.
 build-output/
 *.img
@@ -9,3 +9,9 @@ build-output/
 # 로컬 툴체인/체크아웃이 실수로 들어오면 제외
 optee/
 toolchains/
+
+# 편집기 임시파일
+*.swp
+# vi 인덱스 (make-tags.sh 로 재생성)
+tags
+cscope.*

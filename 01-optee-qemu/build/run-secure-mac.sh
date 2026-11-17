@@ -5,7 +5,7 @@
 #   ./run-secure-mac.sh run        # 실행만
 set -e
 REPO="$(cd "$(dirname "$0")/.." && pwd)"        # 01-optee-qemu
-OPTEE=/data/optee
+OPTEE="${OPTEE_DIR:-$REPO/../optee}"
 IMG=optee-runner:latest
 MODE="${1:-all}"
 
@@ -16,13 +16,13 @@ chmod +x "$OPTEE/build/lab-run.exp"
 
 drun() {  # 컨테이너에서 uid1000(빌드 유저)로 실행. buildroot 는 root 실행을 거부한다.
 	docker run --rm --security-opt seccomp=unconfined \
-		-u 1000:1000 -e HOME=/tmp -v /data/optee:/optee -w /optee/build \
+		-u 1000:1000 -e HOME=/tmp -v "$OPTEE":/optee -w /optee/build \
 		"$IMG" bash -lc "export PATH=/usr/local/bin:\$PATH; $1"
 }
 
 if [ "$MODE" = all ] || [ "$MODE" = build ]; then
 	echo "== 빌드 (optee_examples + rootfs 재생성)"
-	drun "make -j\$(nproc)"
+	drun "make -j${JOBS:-3}"
 fi
 
 if [ "$MODE" = all ] || [ "$MODE" = run ]; then

@@ -15,7 +15,7 @@ QEMU_CHECK_ARGS = -serial mon:stdio -serial file:serial1.log
 ```sh
 docker commit optee-build optee-runner:latest      # 1회
 docker run --rm --security-opt seccomp=unconfined \
-  -v /data/optee:/optee -w /optee/build optee-runner:latest \
+  -v <리포>/optee:/optee -w /optee/build optee-runner:latest \
   bash -lc 'export PATH=/usr/local/bin:$PATH; make check XTEST_ARGS="1001"'
 ```
 - `XTEST_ARGS="1001"` → 게스트에서 `xtest 1001`(regression 서브셋). 비우면 전체 regression.

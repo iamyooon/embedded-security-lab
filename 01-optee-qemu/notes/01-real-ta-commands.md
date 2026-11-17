@@ -25,7 +25,7 @@ hello_world의 `INC_VALUE`(받은 값 +1)는 왕복만 보여주는 뼈대. 실�
 3. **`GENERATE_KEY` + `SIGN`(ECDSA)** — 키 생성(안 나옴) + 서명. secure boot/OTA/V2X 매핑.
 
 ## 레퍼런스 구현 (OP-TEE 기본 제공)
-`/data/optee/optee_examples/` 에 이미 있음 → 읽고 참고:
+`<리포>/optee/optee_examples/` 에 이미 있음 → 읽고 참고:
 - `aes/` (AES 암복호) · `acipher/`(RSA 비대칭) · **`hotp/`(HMAC 기반 OTP)** · `secure_storage/` · `ecdsa/` · `ecdh/`
 
 ## 추천 첫 TA
