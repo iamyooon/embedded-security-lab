@@ -109,6 +109,7 @@ static TEE_Result cmd_mac(struct mac_ctx *ctx, uint32_t ptypes,
 				       TEE_PARAM_TYPE_NONE,
 				       TEE_PARAM_TYPE_NONE);
 	uint32_t tag_len = 0;
+	TEE_Result res = TEE_ERROR_GENERIC;
 
 	if (ptypes != exp)
 		return TEE_ERROR_BAD_PARAMETERS;
@@ -120,8 +121,11 @@ static TEE_Result cmd_mac(struct mac_ctx *ctx, uint32_t ptypes,
 	}
 
 	tag_len = params[1].memref.size;
-	return mac_do(ctx, params[0].memref.buffer, params[0].memref.size,
-		      params[1].memref.buffer, &tag_len, false);
+	res = mac_do(ctx, params[0].memref.buffer, params[0].memref.size,
+		     params[1].memref.buffer, &tag_len, false);
+	if (res == TEE_SUCCESS)
+		params[1].memref.size = tag_len;	/* 실제로 쓴 길이를 CA 에 알림 */
+	return res;
 }
 
 static TEE_Result cmd_verify(struct mac_ctx *ctx, uint32_t ptypes,
@@ -155,8 +159,8 @@ static TEE_Result cmd_verify(struct mac_ctx *ctx, uint32_t ptypes,
 /*
  * 공격 데모(규칙 3): normal world 가 키 자체를 달라고 한다.
  * 키 오브젝트는 TEE_USAGE_EXTRACTABLE 이 제거돼 있으므로 반출은 불가능하다.
- * -> ACCESS_DENIED. (GP 규격상 이 오류는 TA panic 으로 이어질 수 있고,
- *    그것도 "새는 것보다 죽는다"는 정상 동작이다. 결과를 예측한 뒤 실행해보기.)
+ * -> 코어가 BAD_PARAMETERS(tee_svc_cryp.c) -> libutee 가 TA panic -> CA 는 TARGET_DEAD.
+ * panic 은 "새는 것보다 죽는다"는 정상 동작이다. (2026-11-17 실행으로 확인)
  */
 static TEE_Result cmd_export_key(struct mac_ctx *ctx, uint32_t ptypes,
 				 TEE_Param params[4])

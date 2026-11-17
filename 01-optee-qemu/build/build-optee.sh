@@ -31,9 +31,9 @@ if [ "$(id -u)" = "0" ]; then
   # 로그/작업트리 소유권을 빌드 유저로
   touch /optee/optee-build.log
   chown -R 1000:1000 /optee
-  LOG "root 완료 → 빌드 유저($BUILD_USER)로 전환"
   id -u 1000 >/dev/null 2>&1 || { groupadd -g 1000 builder; useradd -m -u 1000 -g 1000 -s /bin/bash builder; }
   BUILD_USER=$(id -un 1000)
+  LOG "root 완료 → 빌드 유저($BUILD_USER)로 전환"
   exec su "$BUILD_USER" -c "JOBS=${JOBS:-3} bash /optee/build-optee.sh"
 fi
 

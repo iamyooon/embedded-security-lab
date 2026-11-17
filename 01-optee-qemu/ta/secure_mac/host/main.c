@@ -106,7 +106,7 @@ int main(void)
 				 &err_origin);
 	printf("[3] VERIFY(정상) -> 0x%08x valid=%u\n", res, op.params[2].value.a);
 
-	/* 4) 페이로드 1바이트 변조 -> valid=0 이어야 한다 (재생/위조 공격) */
+	/* 4) 페이로드 1바이트 변조 -> valid=0 이어야 한다 (변조 공격. 재전송은 별개) */
 	frame[7] ^= 0x01;
 	memset(&op, 0, sizeof(op));
 	op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT,
