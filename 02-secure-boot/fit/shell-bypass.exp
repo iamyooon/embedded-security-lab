@@ -1,0 +1,45 @@
+#!/usr/bin/expect -f
+# [E] FIT 검증 실패 뒤 U-Boot 셸이 뜨는가 / 뜨면 booti 로 무서명 커널을 올릴 수 있는가.
+#   QEMU, QEMU_CHECK_ARGS 는 fit-shell.mk 가 넘긴다. cwd = out/bin.
+set timeout 120
+log_file -a -noappend "serial0.log"
+spawn sh -c "$::env(QEMU) $::env(QEMU_CHECK_ARGS)"
+
+# 공격 1: autoboot 중단 시도 -- U-Boot 배너가 보이면 키를 연타한다
+expect {
+	"U-Boot 20"	{ for {set i 0} {$i < 20} {incr i} { send -- " " ; after 50 } }
+	timeout		{ puts "\n### timeout (U-Boot 까지 못 감)"; exit 2 }
+}
+
+expect {
+	"=> "				{ puts "\n### SHELL=yes (autoboot 중단으로 진입)" ; set via_interrupt 1 }
+	"can't get kernel image"	{ puts "\n### FIT 검증 실패 확인" }
+	"Starting kernel"		{ puts "\n### 검증 통과?? (itb 변조 안 됨)"; exit 3 }
+	timeout				{ puts "\n### timeout (FIT 단계까지 못 감)"; exit 2 }
+}
+
+# 공격 2: 검증 실패 뒤 셸로 떨어지는가
+if {![info exists via_interrupt]} {
+	set timeout 15
+	expect {
+		"=> "		{ puts "\n### SHELL=yes (검증 실패 뒤 진입)" }
+		"resetting"	{ puts "\n### SHELL=no -- reset 으로 감"; expect "U-Boot 20"; puts "\n### 재부팅 확인, 종료"; exit 0 }
+		timeout		{ puts "\n### SHELL=no (15초 동안 프롬프트 없음)"; exit 0 }
+	}
+}
+
+# 셸이 떴다 -> 서명 없는 원본 Image 를 직접 올린다 (bootargs 는 bootcmd 가 이미 setenv 함)
+send -- "load hostfs - 0x42200000 Image\r"
+expect "=> "
+send -- "load hostfs - 0x46000000 rootfs.cpio.gz\r"
+expect "=> "
+send -- "booti 0x42200000 0x46000000:\${filesize} \${fdtcontroladdr}\r"
+
+set timeout 120
+expect {
+	"ogin:"			{ puts "\n### BOOTI=yes -- 무서명 커널로 로그인 프롬프트까지 감" }
+	"Starting kernel"	{ exp_continue }
+	-re {=> $}		{ puts "\n### BOOTI=no (셸로 돌아옴)" }
+	timeout			{ puts "\n### BOOTI=timeout" }
+}
+exit 0

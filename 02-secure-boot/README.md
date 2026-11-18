@@ -13,6 +13,7 @@
 > - 공격자 능력:
 >   - 바꿀 수 없는 것) rom(bl1), rotpk 해시(efuse/otp)
 >   - 바꿀 수 있는 것) 플래시에 있는 공개키, 이미지, 서명값, 인증서. 정식 서명된 구버전 이미지로 교체(롤백)
+>   - 할 수 있는 것) 시리얼 콘솔 접근
 >   - 가정 안 함) qemu 라서 bl1 도 호스트의 파일(out/bin/bl1.bin)이고 rotpk 해시도 빌드에 박힌 값. 호스트 파일을 바꿀 수 있는 공격자는 범위 밖
 > - 막는 것 / 못 막는 것:
 >   - 막는것) 공개키 교체, 이미지 변조, 서명값/인증서 교체
@@ -71,8 +72,17 @@ TF-A 체인은 BL33(U-Boot)까지만 덮고, 원래 U-Boot 는 uImage 를 검증
 |---|---|---|
 | 정상 부팅 | - | conf 서명 `sha256,rsa2048:fitdev+ OK` -> 이미지 해시 `sha256+ OK` x3 -> 커널, secure_mac [1]-[5] 동일 |
 | [D] itb 안 커널 1바이트 변조 (재서명 안 함) | 커널 해시 줄에서 실패 -- 맞음 | 서명 OK, `sha256 error!` -> `Bad Data Hash` -> `can't get kernel image!`. 실패 기준 4 통과 |
+| [E] 위 상태 + 시리얼 콘솔 (`fit/shell-bypass.exp`) | 셸 안 뜸, booti 안 됨 -- **둘 다 틀림** | 실패 직후 `=>` 셸. `load hostfs Image` + `booti` 로 **무서명 커널이 login 까지 부팅** |
+| [E'] 하드닝 후 같은 공격 | - | 배너 직후 키 20번 연타해도 셸 없음, 검증 실패 -> `resetting ...` -> 재부팅. 정상 부팅/secure_mac 동일 |
 
-미확인: [D] 실패 후 U-Boot 가 셸로 떨어지는지 (떨어지면 콘솔에서 `booti` 로 무서명 커널을 올릴 수 있는 구멍).
+[E] 에서 배운 것: FIT 서명 검증은 "bootm 으로 FIT 를 올릴 때"만 강제된다. U-Boot 기본값은 개발 편의라
+bootcmd 실패 -> 셸, autoboot 중 키 입력 -> 셸이고, 셸의 booti 는 서명을 안 본다. 체인을 다 붙여도 마지막 단계가 명령줄을 내주면 끝.
+-> 위협모델 공격자 능력에 "시리얼 콘솔 접근" 추가, 하드닝(`fit/u-boot-fit.conf`):
+
+- bootcmd 끝에 `; reset` -- 실패하면 셸이 아니라 재부팅 (fail-secure, 대신 변조 itb 면 무한 리셋 = 가용성 손실)
+- `BOOTDELAY=-2` -- autoboot 중단 검사 안 함
+- `ENV_IS_NOWHERE` -- 플래시 env 의 bootcmd 를 공격자가 바꾸는 길 차단 (원래 `Loading Environment from Flash`)
+- `CMD_BOOTZ/GO/BOOTEFI` 제거 (심층 방어). `booti` 는 못 뺌: arm64 bootm 이 `booti_setup()` 을 씀 (`boot/bootm.c:676`) -> 셸 차단이 유일한 방어선
 
 ## 연결
 - 01의 TEE는 **이 부팅체인만큼만 신뢰**된다. 04의 HSM 키로 여기 이미지를 서명하면 02↔04 연결.
