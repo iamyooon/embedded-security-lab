@@ -105,6 +105,10 @@ static TEE_Result mac_do(struct mac_ctx *ctx, const void *msg, size_t msg_len,
  * 공통 규칙: 연 핸들은 반드시 닫는다 (TEE_CloseObject). 실패 경로도.
  */
 
+/* 접근 제어 함수 (아래 "호출자별 접근 제어" 절에 정의) */
+static TEE_Result get_client_identity(TEE_Identity *who);
+static TEE_Result check_owner(TEE_ObjectHandle obj);
+
 /*
  * TODO(나) 3 — 키 생성 후 영구 저장
  *
@@ -123,6 +127,12 @@ static TEE_Result key_create(uint32_t id)
 	TEE_Result rst = TEE_ERROR_GENERIC;
 	TEE_ObjectHandle obj = TEE_HANDLE_NULL;
 	TEE_ObjectHandle pobj = TEE_HANDLE_NULL;
+	TEE_Identity me;
+
+	rst = get_client_identity(&me);
+	if (rst != TEE_SUCCESS) {
+		return rst;
+	}
 
 	rst = TEE_AllocateTransientObject(TEE_TYPE_HMAC_SHA256, SECURE_MAC_KEY_BITS, &obj);
 	if (rst != TEE_SUCCESS) {
@@ -138,7 +148,7 @@ static TEE_Result key_create(uint32_t id)
 	TEE_RestrictObjectUsage(obj, TEE_USAGE_MAC);
 
 	rst = TEE_CreatePersistentObject(TEE_STORAGE_PRIVATE, &id, sizeof(id),
-					TEE_DATA_FLAG_ACCESS_READ, obj, NULL, 0, &pobj);
+					TEE_DATA_FLAG_ACCESS_READ, obj, &me, sizeof(me), &pobj);
 
 	TEE_CloseObject(pobj);
 	TEE_FreeTransientObject(obj);
@@ -164,7 +174,13 @@ static TEE_Result key_info(uint32_t id, TEE_ObjectInfo *info)
 	rst = TEE_OpenPersistentObject(TEE_STORAGE_PRIVATE, &id, sizeof(id),
 					TEE_DATA_FLAG_ACCESS_READ, &obj);
 
-	if(rst != TEE_SUCCESS) {
+	if (rst != TEE_SUCCESS) {
+		return rst;
+	}
+
+	rst = check_owner(obj);
+	if (rst != TEE_SUCCESS) {
+		TEE_CloseObject(obj);
 		return rst;
 	}
 
@@ -187,8 +203,15 @@ static TEE_Result key_delete(uint32_t id)
 	TEE_ObjectHandle obj = TEE_HANDLE_NULL;
 
 	rst = TEE_OpenPersistentObject(TEE_STORAGE_PRIVATE, &id, sizeof(id),
-					TEE_DATA_FLAG_ACCESS_WRITE_META, &obj);
+					TEE_DATA_FLAG_ACCESS_WRITE_META | TEE_DATA_FLAG_ACCESS_READ,
+					&obj);
 	if (rst != TEE_SUCCESS) {
+		return rst;
+	}
+
+	rst = check_owner(obj);
+	if (rst != TEE_SUCCESS) {
+		TEE_CloseObject(obj);
 		return rst;
 	}
 
@@ -220,6 +243,12 @@ static TEE_Result mac_by_id(uint32_t id, const void *msg, size_t msg_len,
 		return rst;
 	}
 
+	rst = check_owner(obj);
+	if (rst != TEE_SUCCESS) {
+		TEE_CloseObject(obj);
+		return rst;
+	}
+
 	struct mac_ctx tmp = {
 		.key = obj
 	};
@@ -232,6 +261,70 @@ static TEE_Result mac_by_id(uint32_t id, const void *msg, size_t msg_len,
 
 	TEE_CloseObject(obj);
 	return rst;
+}
+
+/* ===================== 호출자별 접근 제어 (2026-11-18) ===================== */
+/*
+ * 키 주인 = 키를 만든 호출자의 신원(TEE_Identity: login 종류 + uuid, 20바이트).
+ * 신원은 normal world 커널(OP-TEE 드라이버)이 uid 로 계산해 넣는다
+ *   -> 다른 uid 의 앱은 막지만, root 는 setuid 로 주인 행세 가능 (위협모델 "못 막는 것").
+ * 주인 신원은 persistent object 의 데이터 영역(initialData)에 키와 같이 저장한다.
+ */
+
+/* 배관(Claude): 현재 호출자 신원. LOGIN_PUBLIC(신원 없음)은 키 기능을 못 쓴다. */
+static TEE_Result get_client_identity(TEE_Identity *who)
+{
+	TEE_Result res = TEE_GetPropertyAsIdentity(TEE_PROPSET_CURRENT_CLIENT,
+						   "gpd.client.identity", who);
+
+	if (res != TEE_SUCCESS)
+		return res;
+	if (who->login == TEE_LOGIN_PUBLIC)
+		return TEE_ERROR_ACCESS_DENIED;
+	return TEE_SUCCESS;
+}
+
+/*
+ * TODO(나) 7 — 주인 확인
+ *
+ *   obj 는 TEE_DATA_FLAG_ACCESS_READ 를 포함해 연 핸들이어야 한다 (데이터를 읽으니까).
+ *   1) TEE_Identity me, owner;  uint32_t n = 0;
+ *   2) get_client_identity(&me) -- 실패면 그대로 반환
+ *   3) TEE_ReadObjectData(obj, &owner, sizeof(owner), &n)
+ *      -> n != sizeof(owner) 면 TEE_ERROR_CORRUPT_OBJECT
+ *   4) memcmp(&me, &owner, sizeof(me)) != 0 이면 TEE_ERROR_ACCESS_DENIED
+ *   5) 같으면 TEE_SUCCESS
+ *
+ * TODO(나) 8 — 이걸 쓰도록 위 함수들 수정
+ *   key_create : get_client_identity(&me) 로 신원을 얻어
+ *                TEE_CreatePersistentObject(..., obj, &me, sizeof(me), &pobj)  <- NULL, 0 대신
+ *   key_info / mac_by_id : Open 성공 직후 check_owner(obj), 실패면 Close 하고 반환
+ *   key_delete : Open 플래그를 ACCESS_READ | ACCESS_WRITE_META 로 (읽어야 하니까),
+ *                check_owner 실패면 Close 하고 반환 (삭제하면 안 됨)
+ */
+static TEE_Result check_owner(TEE_ObjectHandle obj)
+{
+	TEE_Result rst = TEE_ERROR_GENERIC;
+	TEE_Identity me, owner;
+	uint32_t n = 0;
+
+	rst = get_client_identity(&me);
+	if (rst != TEE_SUCCESS) {
+		return rst;
+	}
+
+	rst = TEE_ReadObjectData(obj, &owner, sizeof(owner), &n);
+	if (rst != TEE_SUCCESS) {
+		return rst;
+	} else if (n != sizeof(owner)) {
+		return TEE_ERROR_CORRUPT_OBJECT;
+	}
+
+	if (memcmp(&me, &owner, sizeof(me)) != 0) {
+		return TEE_ERROR_ACCESS_DENIED;
+	} else {
+		return TEE_SUCCESS;
+	}
 }
 
 /* ---- 여기서부터는 배관(Claude): 파라미터 검사와 디스패치 ---- */

@@ -5,6 +5,10 @@
  *   키는 절대 이쪽으로 오지 않는다 -- 마지막에 일부러 요구해보고 거부를 확인한다.
  */
 #include <err.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -109,6 +113,85 @@ static TEEC_Result t_mac(TEEC_Session *s, uint32_t id, const uint8_t *msg,
 	return res;
 }
 
+/*
+ * ---- 접근 제어 테스트: 다른 uid 로 바꾼 자식 프로세스에서 명령 하나 실행 ----
+ * 자식: 컨텍스트를 root 일 때 연 뒤(/dev/tee0 권한) setuid -> LOGIN_USER 세션 -> 명령.
+ * 신원은 OpenSession 시점의 uid 로 커널 드라이버가 계산한다. 결과는 pipe 로 부모에게.
+ */
+static TEEC_Result as_uid(uid_t uid, uint32_t cmd, uint32_t id, uint32_t login)
+{
+	int fd[2];
+	pid_t pid;
+	TEEC_Result res = TEEC_ERROR_GENERIC;
+
+	if (pipe(fd))
+		err(1, "pipe");
+	pid = fork();
+	if (pid < 0)
+		err(1, "fork");
+	if (pid == 0) {
+		TEEC_Context c;
+		TEEC_Session s;
+		TEEC_UUID u = TA_SECURE_MAC_UUID;
+		uint32_t eo;
+		uint8_t msg[4] = { 1, 2, 3, 4 }, tag[SECURE_MAC_TAG_SIZE];
+		size_t tl = sizeof(tag);
+
+		close(fd[0]);
+		res = TEEC_InitializeContext(NULL, &c);
+		if (res == TEEC_SUCCESS && uid && setuid(uid))
+			res = TEEC_ERROR_GENERIC;
+		if (res == TEEC_SUCCESS)
+			res = TEEC_OpenSession(&c, &s, &u, login, NULL, NULL, &eo);
+		if (res == TEEC_SUCCESS) {
+			uint32_t ty, bi, us;
+
+			if (cmd == TA_SECURE_MAC_CMD_MAC_BY_ID)
+				res = t_mac(&s, id, msg, sizeof(msg), tag, &tl);
+			else if (cmd == TA_SECURE_MAC_CMD_KEY_INFO)
+				res = t_info(&s, id, &ty, &bi, &us);
+			else
+				res = t_id_only(&s, cmd, id);
+			TEEC_CloseSession(&s);
+		}
+		if (write(fd[1], &res, sizeof(res)) != sizeof(res))
+			_exit(1);
+		_exit(0);
+	}
+	close(fd[1]);
+	if (read(fd[0], &res, sizeof(res)) != sizeof(res))
+		res = TEEC_ERROR_COMMUNICATION;
+	close(fd[0]);
+	waitpid(pid, NULL, 0);
+	return res;
+}
+
+static void run_acl_tests(void)
+{
+	const uint32_t K = 2;
+	const uid_t OWNER = 1001, OTHER = 1003;
+
+	printf("== 접근 제어 (주인 = uid %u, 남 = uid %u)\n", OWNER, OTHER);
+	as_uid(OWNER, TA_SECURE_MAC_CMD_KEY_DELETE, K, TEEC_LOGIN_USER);	/* 잔여물 정리 */
+	check("A0  uid1001 KEY_CREATE id=2",
+	      as_uid(OWNER, TA_SECURE_MAC_CMD_KEY_CREATE, K, TEEC_LOGIN_USER), TEEC_SUCCESS);
+	check("A1  uid1003 MAC_BY_ID id=2 (남의 키 사용)",
+	      as_uid(OTHER, TA_SECURE_MAC_CMD_MAC_BY_ID, K, TEEC_LOGIN_USER), TEEC_ERROR_ACCESS_DENIED);
+	check("A2  uid1003 KEY_INFO id=2",
+	      as_uid(OTHER, TA_SECURE_MAC_CMD_KEY_INFO, K, TEEC_LOGIN_USER), TEEC_ERROR_ACCESS_DENIED);
+	check("A3  uid1003 KEY_DELETE id=2 (남의 키 삭제)",
+	      as_uid(OTHER, TA_SECURE_MAC_CMD_KEY_DELETE, K, TEEC_LOGIN_USER), TEEC_ERROR_ACCESS_DENIED);
+	check("A4  root(uid0) 그대로 MAC_BY_ID id=2",
+	      as_uid(0, TA_SECURE_MAC_CMD_MAC_BY_ID, K, TEEC_LOGIN_USER), TEEC_ERROR_ACCESS_DENIED);
+	check("A5  LOGIN_PUBLIC 으로 KEY_CREATE (신원 없음)",
+	      as_uid(0, TA_SECURE_MAC_CMD_KEY_CREATE, 3, TEEC_LOGIN_PUBLIC), TEEC_ERROR_ACCESS_DENIED);
+	/* 한계 확인: root 가 setuid(1001) 로 주인 행세 -> 통과해 버린다 (못 막는 것) */
+	check("A6  root 가 setuid(1001) 후 MAC_BY_ID [한계: 통과]",
+	      as_uid(OWNER, TA_SECURE_MAC_CMD_MAC_BY_ID, K, TEEC_LOGIN_USER), TEEC_SUCCESS);
+	check("A7  주인 uid1001 KEY_DELETE id=2",
+	      as_uid(OWNER, TA_SECURE_MAC_CMD_KEY_DELETE, K, TEEC_LOGIN_USER), TEEC_SUCCESS);
+}
+
 static int run_tests(TEEC_Context *ctx, TEEC_UUID *uuid)
 {
 	TEEC_Session s1, s2;
@@ -123,7 +206,7 @@ static int run_tests(TEEC_Context *ctx, TEEC_UUID *uuid)
 
 	flen = build_frame(frame, 0x123, 42, payload, sizeof(payload));
 
-	if (TEEC_OpenSession(ctx, &s1, uuid, TEEC_LOGIN_PUBLIC, NULL, NULL, &eo))
+	if (TEEC_OpenSession(ctx, &s1, uuid, TEEC_LOGIN_USER, NULL, NULL, &eo))
 		errx(1, "open session 1 failed");
 	t_id_only(&s1, TA_SECURE_MAC_CMD_KEY_DELETE, ID);	/* 이전 실행 잔여물 정리(결과 무시) */
 
@@ -143,7 +226,7 @@ static int run_tests(TEEC_Context *ctx, TEEC_UUID *uuid)
 	TEEC_CloseSession(&s1);
 
 	/* 세션을 닫았다 새로 열어도 같은 키 -> 같은 tag (영속성) */
-	if (TEEC_OpenSession(ctx, &s2, uuid, TEEC_LOGIN_PUBLIC, NULL, NULL, &eo))
+	if (TEEC_OpenSession(ctx, &s2, uuid, TEEC_LOGIN_USER, NULL, NULL, &eo))
 		errx(1, "open session 2 failed");
 	l2 = sizeof(t2);
 	res = t_mac(&s2, ID, frame, flen, t2, &l2);
@@ -192,6 +275,8 @@ static int run_tests(TEEC_Context *ctx, TEEC_UUID *uuid)
 	check("D4  KEY_DELETE 두 번", t_id_only(&s2, TA_SECURE_MAC_CMD_KEY_DELETE, ID),
 	      TEEC_ERROR_ITEM_NOT_FOUND);
 	TEEC_CloseSession(&s2);
+
+	run_acl_tests();
 
 	printf("== 결과: PASS %d / FAIL %d\n", n_pass, n_fail);
 	return n_fail ? 1 : 0;
