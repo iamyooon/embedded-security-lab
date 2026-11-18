@@ -1,0 +1,58 @@
+/dts-v1/;
+/*
+ * FIT verified boot -- 커널 + dtb + initrd 를 한 파일로 묶고, 구성(conf-1)에 서명한다.
+ *   이미지마다 hash-1 (sha256) 이 붙고, conf-1/signature-1 이 그 해시들 + 노드 속성을 덮는다.
+ *   서명은 mkimage -k <keydir> 가 fitdev.key 로 한다. key-name-hint 가 키 파일 이름.
+ * 주소: kernel 42.8MB @0x42200000 (~0x44CD0000), ramdisk 21MB @0x46000000, itb 자체는 0x50000000 에 로드.
+ */
+/ {
+	description = "lab: signed kernel + fdt + initrd";
+	#address-cells = <1>;
+
+	images {
+		kernel-1 {
+			description = "Linux Image";
+			data = /incbin/("Image");
+			type = "kernel";
+			arch = "arm64";
+			os = "linux";
+			compression = "none";
+			load = <0x42200000>;
+			entry = <0x42200000>;
+			hash-1 { algo = "sha256"; };
+		};
+		fdt-1 {
+			description = "runtime DTB (QEMU + OP-TEE/psci 노드), chosen initrd 제거";
+			data = /incbin/("kernel-fdt.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			hash-1 { algo = "sha256"; };
+		};
+		ramdisk-1 {
+			description = "buildroot rootfs";
+			data = /incbin/("rootfs.cpio.gz");
+			type = "ramdisk";
+			arch = "arm64";
+			os = "linux";
+			compression = "none";
+			load = <0x46000000>;
+			hash-1 { algo = "sha256"; };
+		};
+	};
+
+	configurations {
+		default = "conf-1";
+		conf-1 {
+			description = "kernel + fdt + ramdisk";
+			kernel = "kernel-1";
+			fdt = "fdt-1";
+			ramdisk = "ramdisk-1";
+			signature-1 {
+				algo = "sha256,rsa2048";
+				key-name-hint = "fitdev";
+				sign-images = "kernel", "fdt", "ramdisk";
+			};
+		};
+	};
+};

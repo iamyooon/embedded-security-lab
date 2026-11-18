@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1130" viewBox="0 0 1900 1130">
+<defs><marker id="ah" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker></defs>
+<rect width="1900" height="1130" fill="#fff"/>
+<text x="30" y="44" font-family="NanumGothic, sans-serif" font-size="26" fill="#1d1d1f" font-weight="bold" text-anchor="start" xml:space="preserve">Secure Boot 전체 신뢰 체인 -- TF-A TBB + U-Boot FIT verified boot</text>
+<text x="30" y="74" font-family="NanumGothic, sans-serif" font-size="17" fill="#555555" font-weight="normal" text-anchor="start" xml:space="preserve">각 단계는 다음 단계를 검증하고 나서 넘겨준다. 한 칸이라도 검증 없이 넘어가면 그 뒤는 전부 못 믿는다.</text>
+<text x="30" y="122" font-family="NanumGothic, sans-serif" font-size="21" fill="#c0392b" font-weight="bold" text-anchor="start" xml:space="preserve">지금 (2026-11-18 빌드)</text>
+<rect x="30" y="140" width="210" height="175" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2.5"/>
+<text x="42" y="166" font-family="NanumGothic, sans-serif" font-size="17" fill="#666666" font-weight="bold" text-anchor="start" xml:space="preserve">BL1 + OTP</text>
+<text x="42" y="192" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">Mask ROM (못 바꿈)</text>
+<text x="42" y="215" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">OTP: ROTPK 해시</text>
+<text x="42" y="238" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve"></text>
+<text x="42" y="261" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">[A][B][C] 로 확인</text>
+<line x1="240" y1="220" x2="290" y2="220" stroke="#555" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="265.0" y="180.0" font-family="NanumGothic, sans-serif" font-size="14" fill="#555" font-weight="normal" text-anchor="middle" xml:space="preserve">검증</text>
+<rect x="290" y="140" width="250" height="175" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2.5"/>
+<text x="302" y="166" font-family="NanumGothic, sans-serif" font-size="17" fill="#3b6fb6" font-weight="bold" text-anchor="start" xml:space="preserve">BL2</text>
+<text x="302" y="192" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">tb_fw.crt 로 검증됨</text>
+<text x="302" y="215" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(루트 키)</text>
+<line x1="540" y1="220" x2="600" y2="220" stroke="#555" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="570.0" y="180.0" font-family="NanumGothic, sans-serif" font-size="14" fill="#555" font-weight="normal" text-anchor="middle" xml:space="preserve">검증</text>
+<rect x="600" y="140" width="330" height="175" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2.5"/>
+<text x="612" y="166" font-family="NanumGothic, sans-serif" font-size="17" fill="#3b6fb6" font-weight="bold" text-anchor="start" xml:space="preserve">BL2 가 BL33 검증</text>
+<text x="612" y="192" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">trusted_key.crt   (루트 키 서명)</text>
+<text x="612" y="215" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve"> -&gt; nt_fw_key.crt  (NT world 키)</text>
+<text x="612" y="238" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve"> -&gt; nt_fw_content.crt</text>
+<text x="612" y="261" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">     = hash(bl33.bin)</text>
+<text x="612" y="284" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(BL31/BL32 도 같은 식, 생략)</text>
+<line x1="930" y1="220" x2="990" y2="220" stroke="#555" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="960.0" y="180.0" font-family="NanumGothic, sans-serif" font-size="14" fill="#555" font-weight="normal" text-anchor="middle" xml:space="preserve">검증</text>
+<rect x="990" y="140" width="360" height="175" rx="8" fill="#e7f5ec" stroke="#2e8b57" stroke-width="2.5"/>
+<text x="1002" y="166" font-family="NanumGothic, sans-serif" font-size="17" fill="#2e8b57" font-weight="bold" text-anchor="start" xml:space="preserve">BL33 = u-boot.bin</text>
+<text x="1002" y="192" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">u-boot-nodtb.bin (코드) 만</text>
+<text x="1002" y="215" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">u-boot.bin == u-boot-nodtb.bin</text>
+<text x="1002" y="238" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(확인함, cmp 동일)</text>
+<text x="1002" y="261" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">DTB 는 안에 없음</text>
+<rect x="990" y="355" width="360" height="100" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="2.5"/>
+<text x="1002" y="381" font-family="NanumGothic, sans-serif" font-size="17" fill="#c0392b" font-weight="bold" text-anchor="start" xml:space="preserve">DTB: QEMU 가 RAM 에 만들어 줌</text>
+<text x="1002" y="407" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">CONFIG_OF_BOARD=y</text>
+<text x="1002" y="430" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">board_fdt_blob_setup() 이 그대로 씀 -&gt; 검증 안 됨</text>
+<line x1="1170" y1="355" x2="1170" y2="317" stroke="#c0392b" stroke-width="2.5" marker-end="url(#ah)" stroke-dasharray="7,5"/>
+<line x1="1350" y1="220" x2="1410" y2="220" stroke="#c0392b" stroke-width="2.5" marker-end="url(#ah)" stroke-dasharray="7,5"/>
+<text x="1380.0" y="180.0" font-family="NanumGothic, sans-serif" font-size="14" fill="#c0392b" font-weight="normal" text-anchor="middle" xml:space="preserve">없음</text>
+<rect x="1410" y="140" width="460" height="175" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="2.5"/>
+<text x="1422" y="166" font-family="NanumGothic, sans-serif" font-size="17" fill="#c0392b" font-weight="bold" text-anchor="start" xml:space="preserve">uImage (legacy) + rootfs</text>
+<text x="1422" y="192" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">load hostfs - ... uImage</text>
+<text x="1422" y="215" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">bootm ${kernel_addr_r} ...</text>
+<text x="1422" y="238" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve"></text>
+<text x="1422" y="261" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">커널은 체인 밖 -- 바꿔도 부팅됨</text>
+<text x="1422" y="284" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(위협모델 자산인데 비어 있음)</text>
+<line x1="30" y1="485" x2="1870" y2="485" stroke="#ccc" stroke-width="2"/>
+<text x="30" y="528" font-family="NanumGothic, sans-serif" font-size="21" fill="#2e8b57" font-weight="bold" text-anchor="start" xml:space="preserve">목표 (FIT verified boot 적용 후)</text>
+<rect x="30" y="546" width="210" height="175" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2.5"/>
+<text x="42" y="572" font-family="NanumGothic, sans-serif" font-size="17" fill="#666666" font-weight="bold" text-anchor="start" xml:space="preserve">BL1 + OTP</text>
+<text x="42" y="598" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">Mask ROM (못 바꿈)</text>
+<text x="42" y="621" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">OTP: ROTPK 해시</text>
+<text x="42" y="644" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve"></text>
+<text x="42" y="667" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">[A][B][C] 로 확인</text>
+<line x1="240" y1="626" x2="290" y2="626" stroke="#555" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="265.0" y="586.0" font-family="NanumGothic, sans-serif" font-size="14" fill="#555" font-weight="normal" text-anchor="middle" xml:space="preserve">검증</text>
+<rect x="290" y="546" width="250" height="175" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2.5"/>
+<text x="302" y="572" font-family="NanumGothic, sans-serif" font-size="17" fill="#3b6fb6" font-weight="bold" text-anchor="start" xml:space="preserve">BL2</text>
+<text x="302" y="598" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">tb_fw.crt 로 검증됨</text>
+<text x="302" y="621" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(루트 키)</text>
+<line x1="540" y1="626" x2="600" y2="626" stroke="#555" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="570.0" y="586.0" font-family="NanumGothic, sans-serif" font-size="14" fill="#555" font-weight="normal" text-anchor="middle" xml:space="preserve">검증</text>
+<rect x="600" y="546" width="330" height="175" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2.5"/>
+<text x="612" y="572" font-family="NanumGothic, sans-serif" font-size="17" fill="#3b6fb6" font-weight="bold" text-anchor="start" xml:space="preserve">BL2 가 BL33 검증</text>
+<text x="612" y="598" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">trusted_key.crt   (루트 키 서명)</text>
+<text x="612" y="621" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve"> -&gt; nt_fw_key.crt  (NT world 키)</text>
+<text x="612" y="644" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve"> -&gt; nt_fw_content.crt</text>
+<text x="612" y="667" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">     = hash(bl33.bin)</text>
+<text x="612" y="690" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(BL31/BL32 도 같은 식, 생략)</text>
+<line x1="930" y1="626" x2="990" y2="626" stroke="#555" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="960.0" y="586.0" font-family="NanumGothic, sans-serif" font-size="14" fill="#555" font-weight="normal" text-anchor="middle" xml:space="preserve">검증</text>
+<rect x="990" y="546" width="360" height="175" rx="8" fill="#e7f5ec" stroke="#2e8b57" stroke-width="2.5"/>
+<text x="1002" y="572" font-family="NanumGothic, sans-serif" font-size="17" fill="#2e8b57" font-weight="bold" text-anchor="start" xml:space="preserve">BL33 = u-boot.bin</text>
+<text x="1002" y="598" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">u-boot-nodtb.bin (코드)</text>
+<text x="1002" y="621" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">+ u-boot.dtb  &lt;- 빌드 때 붙임</text>
+<text x="1002" y="644" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">    /signature/key-fit</text>
+<text x="1002" y="667" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">      FIT 공개키 (mkimage -K)</text>
+<text x="1002" y="690" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">bl33 해시가 공개키까지 덮음</text>
+<line x1="1350" y1="626" x2="1410" y2="626" stroke="#555" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="1380.0" y="586.0" font-family="NanumGothic, sans-serif" font-size="14" fill="#555" font-weight="normal" text-anchor="middle" xml:space="preserve">검증</text>
+<rect x="1410" y="546" width="460" height="175" rx="8" fill="#fff4e0" stroke="#c77700" stroke-width="2.5"/>
+<text x="1422" y="572" font-family="NanumGothic, sans-serif" font-size="17" fill="#c77700" font-weight="bold" text-anchor="start" xml:space="preserve">kernel.itb (FIT)</text>
+<text x="1422" y="598" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">/images/kernel-1  data + hash</text>
+<text x="1422" y="621" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">/images/fdt-1     data + hash</text>
+<text x="1422" y="644" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">/images/ramdisk-1 data + hash</text>
+<text x="1422" y="667" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">/configurations/conf-1 + signature</text>
+<text x="1422" y="690" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">bootm: 서명 -&gt; 각 이미지 해시</text>
+<rect x="30" y="760" width="900" height="340" rx="8" fill="#f4ecfb" stroke="#7d4cad" stroke-width="2.5"/>
+<text x="42" y="786" font-family="NanumGothic, sans-serif" font-size="17" fill="#7d4cad" font-weight="bold" text-anchor="start" xml:space="preserve">키 3 종류 -- 누가 무엇을 서명/검증하나</text>
+<text x="50" y="826" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="bold" text-anchor="start" xml:space="preserve">키</text>
+<text x="220" y="826" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="bold" text-anchor="start" xml:space="preserve">비밀키 (서명, 개발사/HSM)</text>
+<text x="530" y="826" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="bold" text-anchor="start" xml:space="preserve">공개키를 믿는 근거</text>
+<text x="50" y="866" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">루트 키</text>
+<text x="220" y="866" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">tb_fw.crt, trusted_key.crt</text>
+<text x="530" y="866" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">OTP 의 ROTPK 해시 (못 바꿈)</text>
+<text x="50" y="906" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">NT world 키</text>
+<text x="220" y="906" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">nt_fw_key/content.crt</text>
+<text x="530" y="906" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">trusted_key.crt 안 (루트 키가 보증)</text>
+<text x="50" y="946" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">FIT 키 (새로)</text>
+<text x="220" y="946" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">kernel.itb 의 conf 서명</text>
+<text x="530" y="946" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">u-boot.dtb 안 (bl33 해시가 보증)</text>
+<text x="50" y="1010" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">FIT 키를 루트 키와 나누는 이유: 커널은 자주 서명 -&gt; 유출 기회 많음.</text>
+<text x="50" y="1036" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">FIT 키가 새도 펌웨어 체인은 안전, 새 공개키를 넣은 U-Boot 로 교체하면 복구.</text>
+<text x="50" y="1062" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">단 옛 U-Boot 로 롤백하면 옛 키가 살아남 -&gt; NV 카운터 필요 (위협모델 '못 막는 것').</text>
+<rect x="970" y="760" width="900" height="340" rx="8" fill="#e7f5ec" stroke="#2e8b57" stroke-width="2.5"/>
+<text x="982" y="786" font-family="NanumGothic, sans-serif" font-size="17" fill="#2e8b57" font-weight="bold" text-anchor="start" xml:space="preserve">목표로 가려면 (해야 할 일)</text>
+<text x="982" y="812" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(1) FIT 키쌍 생성 (openssl, RSA-2048)</text>
+<text x="982" y="835" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(2) kernel.its 작성: kernel + fdt + ramdisk, conf 에 signature</text>
+<text x="982" y="858" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(3) mkimage -f kernel.its -k &lt;키dir&gt; -K u-boot.dtb -r kernel.itb</text>
+<text x="982" y="881" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">     -&gt; itb 에 서명, u-boot.dtb 에 공개키 기록 (required = conf)</text>
+<text x="982" y="904" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(4) U-Boot: OF_BOARD 끄고 u-boot.dtb 를 u-boot.bin 에 붙여 빌드</text>
+<text x="982" y="927" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">     -&gt; TF-A 가 bl33 을 다시 서명 (cert 갱신)</text>
+<text x="982" y="950" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(5) BOOTCOMMAND: load hostfs kernel.itb -&gt; bootm</text>
+<text x="982" y="973" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">(6) 공격 데모: itb 안 커널 1바이트 변조 -&gt; bootm 거부?</text>
+<text x="982" y="996" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve"></text>
+<text x="982" y="1019" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start" xml:space="preserve">미확인: QEMU DTB 없이 U-Boot 가 뜨는지 (메모리/장치 정보)</text>
+</svg>

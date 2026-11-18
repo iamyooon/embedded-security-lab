@@ -15,3 +15,6 @@ toolchains/
 # vi 인덱스 (make-tags.sh 로 재생성)
 tags
 cscope.*
+
+# 출처 불명 대화 덤프(docs/conversations 등) — 기밀 섞일 수 있어 추적 안 함
+docs/
