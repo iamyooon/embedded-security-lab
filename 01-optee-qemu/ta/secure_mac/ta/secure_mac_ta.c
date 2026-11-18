@@ -99,7 +99,220 @@ static TEE_Result mac_do(struct mac_ctx *ctx, const void *msg, size_t msg_len,
 	return rst;
 }
 
+/* ===================== 키 생명주기 (Persistent Object) ===================== */
+/*
+ * objectID = key id 4바이트. 저장소는 TA UUID 별로 분리돼 다른 TA 는 같은 id 로도 못 연다.
+ * 공통 규칙: 연 핸들은 반드시 닫는다 (TEE_CloseObject). 실패 경로도.
+ */
+
+/*
+ * TODO(나) 3 — 키 생성 후 영구 저장
+ *
+ *   1) gen_key() 와 같은 방법으로 transient 키를 만든다
+ *      (Allocate -> GenerateKey -> RestrictObjectUsage(TEE_USAGE_MAC))
+ *   2) TEE_CreatePersistentObject(TEE_STORAGE_PRIVATE, &id, sizeof(id),
+ *                                 TEE_DATA_FLAG_ACCESS_READ,   <- 덮어쓰기 플래그 없음 = 같은 id 면 ACCESS_CONFLICT
+ *                                 tobj, NULL, 0, &pobj)
+ *      -> tobj 의 속성(키 값)과 usage 가 그대로 복사된다
+ *   3) TEE_CloseObject(pobj)
+ *   4) TEE_FreeTransientObject(tobj)   <- 메모리의 키 사본 정리. 성공/실패 모두
+ *   res 반환.
+ */
+static TEE_Result key_create(uint32_t id)
+{
+	TEE_Result rst = TEE_ERROR_GENERIC;
+	TEE_ObjectHandle obj = TEE_HANDLE_NULL;
+	TEE_ObjectHandle pobj = TEE_HANDLE_NULL;
+
+	rst = TEE_AllocateTransientObject(TEE_TYPE_HMAC_SHA256, SECURE_MAC_KEY_BITS, &obj);
+	if (rst != TEE_SUCCESS) {
+		return rst;
+	}
+
+	rst = TEE_GenerateKey(obj, SECURE_MAC_KEY_BITS, NULL, 0);
+	if (rst != TEE_SUCCESS) {
+		TEE_FreeTransientObject(obj);
+		return rst;
+	}
+
+	TEE_RestrictObjectUsage(obj, TEE_USAGE_MAC);
+
+	rst = TEE_CreatePersistentObject(TEE_STORAGE_PRIVATE, &id, sizeof(id),
+					TEE_DATA_FLAG_ACCESS_READ, obj, NULL, 0, &pobj);
+
+	TEE_CloseObject(pobj);
+	TEE_FreeTransientObject(obj);
+
+	return rst;
+
+}
+
+/*
+ * TODO(나) 4 — 메타데이터 조회 (키 값은 절대 안 읽는다)
+ *
+ *   1) TEE_OpenPersistentObject(TEE_STORAGE_PRIVATE, &id, sizeof(id),
+ *                               TEE_DATA_FLAG_ACCESS_READ, &obj)
+ *      -> 없으면 TEE_ERROR_ITEM_NOT_FOUND 가 그대로 돌아오게 둔다
+ *   2) TEE_GetObjectInfo1(obj, info)
+ *   3) TEE_CloseObject(obj)
+ */
+static TEE_Result key_info(uint32_t id, TEE_ObjectInfo *info)
+{
+	TEE_Result rst = TEE_ERROR_GENERIC;
+	TEE_ObjectHandle obj = TEE_HANDLE_NULL;
+
+	rst = TEE_OpenPersistentObject(TEE_STORAGE_PRIVATE, &id, sizeof(id),
+					TEE_DATA_FLAG_ACCESS_READ, &obj);
+
+	if(rst != TEE_SUCCESS) {
+		return rst;
+	}
+
+	rst = TEE_GetObjectInfo1(obj, info);
+	TEE_CloseObject(obj);
+
+	return rst;
+}
+
+/*
+ * TODO(나) 5 — 삭제
+ *
+ *   1) TEE_OpenPersistentObject(..., TEE_DATA_FLAG_ACCESS_WRITE_META, &obj)
+ *      <- 삭제/이름변경 권한은 WRITE_META 로 연 핸들에만 있다
+ *   2) TEE_CloseAndDeletePersistentObject1(obj)   <- 닫기까지 한다 (따로 Close 하지 않음)
+ */
+static TEE_Result key_delete(uint32_t id)
+{
+	TEE_Result rst = TEE_ERROR_GENERIC;
+	TEE_ObjectHandle obj = TEE_HANDLE_NULL;
+
+	rst = TEE_OpenPersistentObject(TEE_STORAGE_PRIVATE, &id, sizeof(id),
+					TEE_DATA_FLAG_ACCESS_WRITE_META, &obj);
+	if (rst != TEE_SUCCESS) {
+		return rst;
+	}
+
+	rst = TEE_CloseAndDeletePersistentObject1(obj);
+	if (rst != TEE_SUCCESS) {
+		return rst;
+	}
+
+	return rst;
+}
+
+/*
+ * TODO(나) 6 — 저장된 키로 MAC
+ *
+ *   1) TEE_OpenPersistentObject(..., TEE_DATA_FLAG_ACCESS_READ, &obj)
+ *   2) struct mac_ctx tmp = { .key = obj };
+ *      mac_do(&tmp, msg, msg_len, tag, tag_len, false)   <- TODO 2 를 그대로 재사용
+ *   3) TEE_CloseObject(obj)
+ */
+static TEE_Result mac_by_id(uint32_t id, const void *msg, size_t msg_len,
+			    void *tag, uint32_t *tag_len)
+{
+	TEE_Result rst = TEE_ERROR_GENERIC;
+	TEE_ObjectHandle obj = TEE_HANDLE_NULL;
+
+	rst = TEE_OpenPersistentObject(TEE_STORAGE_PRIVATE, &id, sizeof(id),
+					TEE_DATA_FLAG_ACCESS_READ, &obj);
+	if (rst != TEE_SUCCESS) {
+		return rst;
+	}
+
+	struct mac_ctx tmp = {
+		.key = obj
+	};
+
+	rst = mac_do(&tmp, msg, msg_len, tag, tag_len, false);
+	if (rst != TEE_SUCCESS) {
+		TEE_CloseObject(obj);
+		return rst;
+	}
+
+	TEE_CloseObject(obj);
+	return rst;
+}
+
 /* ---- 여기서부터는 배관(Claude): 파라미터 검사와 디스패치 ---- */
+
+static TEE_Result cmd_gen_key(struct mac_ctx *ctx, uint32_t ptypes)
+{
+	uint32_t exp = TEE_PARAM_TYPES(TEE_PARAM_TYPE_NONE, TEE_PARAM_TYPE_NONE,
+				       TEE_PARAM_TYPE_NONE, TEE_PARAM_TYPE_NONE);
+
+	if (ptypes != exp)
+		return TEE_ERROR_BAD_PARAMETERS;	/* 2026-11-18 추가: 원래 검사 없었음 */
+	return gen_key(ctx);
+}
+
+static TEE_Result cmd_key_create(uint32_t ptypes, TEE_Param params[4])
+{
+	uint32_t exp = TEE_PARAM_TYPES(TEE_PARAM_TYPE_VALUE_INPUT,
+				       TEE_PARAM_TYPE_NONE,
+				       TEE_PARAM_TYPE_NONE,
+				       TEE_PARAM_TYPE_NONE);
+
+	if (ptypes != exp)
+		return TEE_ERROR_BAD_PARAMETERS;
+	return key_create(params[0].value.a);
+}
+
+static TEE_Result cmd_key_info(uint32_t ptypes, TEE_Param params[4])
+{
+	uint32_t exp = TEE_PARAM_TYPES(TEE_PARAM_TYPE_VALUE_INPUT,
+				       TEE_PARAM_TYPE_VALUE_OUTPUT,
+				       TEE_PARAM_TYPE_VALUE_OUTPUT,
+				       TEE_PARAM_TYPE_NONE);
+	TEE_ObjectInfo info = { };
+	TEE_Result res = TEE_ERROR_GENERIC;
+
+	if (ptypes != exp)
+		return TEE_ERROR_BAD_PARAMETERS;
+	res = key_info(params[0].value.a, &info);
+	if (res != TEE_SUCCESS)
+		return res;
+	params[1].value.a = info.objectType;
+	params[1].value.b = info.keySize;
+	params[2].value.a = info.objectUsage;
+	return TEE_SUCCESS;
+}
+
+static TEE_Result cmd_key_delete(uint32_t ptypes, TEE_Param params[4])
+{
+	uint32_t exp = TEE_PARAM_TYPES(TEE_PARAM_TYPE_VALUE_INPUT,
+				       TEE_PARAM_TYPE_NONE,
+				       TEE_PARAM_TYPE_NONE,
+				       TEE_PARAM_TYPE_NONE);
+
+	if (ptypes != exp)
+		return TEE_ERROR_BAD_PARAMETERS;
+	return key_delete(params[0].value.a);
+}
+
+static TEE_Result cmd_mac_by_id(uint32_t ptypes, TEE_Param params[4])
+{
+	uint32_t exp = TEE_PARAM_TYPES(TEE_PARAM_TYPE_VALUE_INPUT,
+				       TEE_PARAM_TYPE_MEMREF_INPUT,
+				       TEE_PARAM_TYPE_MEMREF_OUTPUT,
+				       TEE_PARAM_TYPE_NONE);
+	uint32_t tag_len = 0;
+	TEE_Result res = TEE_ERROR_GENERIC;
+
+	if (ptypes != exp)
+		return TEE_ERROR_BAD_PARAMETERS;
+	if (params[2].memref.size < SECURE_MAC_TAG_SIZE) {
+		params[2].memref.size = SECURE_MAC_TAG_SIZE;
+		return TEE_ERROR_SHORT_BUFFER;
+	}
+
+	tag_len = params[2].memref.size;
+	res = mac_by_id(params[0].value.a, params[1].memref.buffer,
+			params[1].memref.size, params[2].memref.buffer, &tag_len);
+	if (res == TEE_SUCCESS)
+		params[2].memref.size = tag_len;
+	return res;
+}
 
 static TEE_Result cmd_mac(struct mac_ctx *ctx, uint32_t ptypes,
 			  TEE_Param params[4])
@@ -230,13 +443,21 @@ TEE_Result TA_InvokeCommandEntryPoint(void *sess_ctx, uint32_t cmd_id,
 
 	switch (cmd_id) {
 	case TA_SECURE_MAC_CMD_GEN_KEY:
-		return gen_key(ctx);
+		return cmd_gen_key(ctx, ptypes);
 	case TA_SECURE_MAC_CMD_MAC:
 		return cmd_mac(ctx, ptypes, params);
 	case TA_SECURE_MAC_CMD_VERIFY:
 		return cmd_verify(ctx, ptypes, params);
 	case TA_SECURE_MAC_CMD_EXPORT_KEY:
 		return cmd_export_key(ctx, ptypes, params);
+	case TA_SECURE_MAC_CMD_KEY_CREATE:
+		return cmd_key_create(ptypes, params);
+	case TA_SECURE_MAC_CMD_KEY_INFO:
+		return cmd_key_info(ptypes, params);
+	case TA_SECURE_MAC_CMD_KEY_DELETE:
+		return cmd_key_delete(ptypes, params);
+	case TA_SECURE_MAC_CMD_MAC_BY_ID:
+		return cmd_mac_by_id(ptypes, params);
 	default:
 		return TEE_ERROR_NOT_SUPPORTED;
 	}
