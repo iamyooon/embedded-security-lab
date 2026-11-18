@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="1000" viewBox="0 0 1640 1000">
+<defs><marker id="ah" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#777"/></marker></defs>
+<rect width="1640" height="1000" fill="#ffffff"/>
+<text x="40" y="50" font-family="NanumGothic, sans-serif" font-size="28" fill="#1d1d1f" font-weight="bold" text-anchor="start">01 호출자별 접근 제어 -- 키 주인만 INFO / MAC / DELETE</text>
+<text x="40" y="84" font-family="NanumGothic, sans-serif" font-size="17" fill="#555555" font-weight="normal" text-anchor="start">주인 = 키를 만든 호출자의 TEE_Identity (login + uid 로 계산한 uuid, 20B).  결과: PASS 26 / FAIL 0  (commit e7630b5)</text>
+<text x="40" y="135" font-family="NanumGothic, sans-serif" font-size="19" fill="#1d1d1f" font-weight="bold" text-anchor="start">Normal world 앱 (EL0)</text>
+<text x="420" y="135" font-family="NanumGothic, sans-serif" font-size="19" fill="#1d1d1f" font-weight="bold" text-anchor="start">Linux 커널 tee 드라이버</text>
+<text x="800" y="135" font-family="NanumGothic, sans-serif" font-size="19" fill="#1d1d1f" font-weight="bold" text-anchor="start">TA: check_owner()</text>
+<text x="1300" y="135" font-family="NanumGothic, sans-serif" font-size="19" fill="#1d1d1f" font-weight="bold" text-anchor="start">결과</text>
+<rect x="790" y="150" width="470" height="610" rx="12" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
+<text x="810" y="182" font-family="NanumGothic, sans-serif" font-size="16" fill="#555555" font-weight="normal" text-anchor="start">Secure world</text>
+<rect x="40" y="210" width="330" height="70" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2"/>
+<text x="56" y="240" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">uid 1001 앱 (주인)</text>
+<text x="56" y="266" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">A0 생성 / A7 삭제</text>
+<line x1="370" y1="245" x2="418" y2="245" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="420" y="210" width="330" height="70" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2"/>
+<text x="436" y="240" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">프로세스 uid 로 신원 계산</text>
+<text x="436" y="266" font-family="NanumGothicCoding, monospace" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">USER + uuid(1001)</text>
+<line x1="750" y1="245" x2="808" y2="245" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="810" y="220" width="200" height="50" rx="8" fill="#ffffff" stroke="#c98a00" stroke-width="2"/>
+<text x="910" y="252" font-family="NanumGothicCoding, monospace" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="middle">me == owner ?</text>
+<line x1="1010" y1="245" x2="1298" y2="245" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1300" y="210" width="300" height="70" rx="8" fill="#e7f5ec" stroke="#2e8b57" stroke-width="2"/>
+<text x="1450" y="253" font-family="NanumGothicCoding, monospace" font-size="19" fill="#2e8b57" font-weight="bold" text-anchor="middle">SUCCESS</text>
+<rect x="40" y="315" width="330" height="70" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2"/>
+<text x="56" y="345" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">uid 1003 앱 (남)</text>
+<text x="56" y="371" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">A1 MAC / A2 INFO / A3 삭제</text>
+<line x1="370" y1="350" x2="418" y2="350" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="420" y="315" width="330" height="70" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2"/>
+<text x="436" y="345" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">프로세스 uid 로 신원 계산</text>
+<text x="436" y="371" font-family="NanumGothicCoding, monospace" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">USER + uuid(1003)</text>
+<line x1="750" y1="350" x2="808" y2="350" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="810" y="325" width="200" height="50" rx="8" fill="#ffffff" stroke="#c98a00" stroke-width="2"/>
+<text x="910" y="357" font-family="NanumGothicCoding, monospace" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="middle">me == owner ?</text>
+<line x1="1010" y1="350" x2="1298" y2="350" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1300" y="315" width="300" height="70" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+<text x="1450" y="358" font-family="NanumGothicCoding, monospace" font-size="19" fill="#c0392b" font-weight="bold" text-anchor="middle">ACCESS_DENIED</text>
+<rect x="40" y="420" width="330" height="70" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2"/>
+<text x="56" y="450" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">root (uid 0) 그대로</text>
+<text x="56" y="476" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">A4 MAC</text>
+<line x1="370" y1="455" x2="418" y2="455" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="420" y="420" width="330" height="70" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2"/>
+<text x="436" y="450" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">프로세스 uid 로 신원 계산</text>
+<text x="436" y="476" font-family="NanumGothicCoding, monospace" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">USER + uuid(0)</text>
+<line x1="750" y1="455" x2="808" y2="455" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="810" y="430" width="200" height="50" rx="8" fill="#ffffff" stroke="#c98a00" stroke-width="2"/>
+<text x="910" y="462" font-family="NanumGothicCoding, monospace" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="middle">me == owner ?</text>
+<line x1="1010" y1="455" x2="1298" y2="455" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1300" y="420" width="300" height="70" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+<text x="1450" y="463" font-family="NanumGothicCoding, monospace" font-size="19" fill="#c0392b" font-weight="bold" text-anchor="middle">ACCESS_DENIED</text>
+<rect x="40" y="525" width="330" height="70" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2"/>
+<text x="56" y="555" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">root -&gt; setuid(1001)</text>
+<text x="56" y="581" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">A6 MAC  [한계]</text>
+<line x1="370" y1="560" x2="418" y2="560" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="420" y="525" width="330" height="70" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2"/>
+<text x="436" y="555" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">프로세스 uid 로 신원 계산</text>
+<text x="436" y="581" font-family="NanumGothicCoding, monospace" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">USER + uuid(1001)</text>
+<line x1="750" y1="560" x2="808" y2="560" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="810" y="535" width="200" height="50" rx="8" fill="#ffffff" stroke="#c98a00" stroke-width="2"/>
+<text x="910" y="567" font-family="NanumGothicCoding, monospace" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="middle">me == owner ?</text>
+<line x1="1010" y1="560" x2="1298" y2="560" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1300" y="525" width="300" height="70" rx="8" fill="#e7f5ec" stroke="#2e8b57" stroke-width="2"/>
+<text x="1450" y="568" font-family="NanumGothicCoding, monospace" font-size="19" fill="#2e8b57" font-weight="bold" text-anchor="middle">SUCCESS</text>
+<rect x="40" y="630" width="330" height="70" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2"/>
+<text x="56" y="660" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">LOGIN_PUBLIC</text>
+<text x="56" y="686" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">A5 생성</text>
+<line x1="370" y1="665" x2="418" y2="665" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="420" y="630" width="330" height="70" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2"/>
+<text x="436" y="660" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">프로세스 uid 로 신원 계산</text>
+<text x="436" y="686" font-family="NanumGothicCoding, monospace" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">PUBLIC (신원 없음)</text>
+<line x1="750" y1="665" x2="808" y2="665" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="810" y="640" width="200" height="50" rx="8" fill="#ffffff" stroke="#c98a00" stroke-width="2"/>
+<text x="910" y="672" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="middle">PUBLIC -&gt; 바로 거부</text>
+<line x1="1010" y1="665" x2="1298" y2="665" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1300" y="630" width="300" height="70" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+<text x="1450" y="673" font-family="NanumGothicCoding, monospace" font-size="19" fill="#c0392b" font-weight="bold" text-anchor="middle">ACCESS_DENIED</text>
+<rect x="790" y="780" width="470" height="190" rx="10" fill="#ffffff" stroke="#c98a00" stroke-width="2"/>
+<text x="810" y="812" font-family="NanumGothic, sans-serif" font-size="17" fill="#1d1d1f" font-weight="bold" text-anchor="start">Persistent object id=2  (/data/tee, 암호화)</text>
+<rect x="810" y="830" width="210" height="120" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2"/>
+<text x="825" y="858" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="bold" text-anchor="start">속성 (attributes)</text>
+<text x="825" y="886" font-family="NanumGothicCoding, monospace" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">HMAC 키 256bit</text>
+<text x="825" y="912" font-family="NanumGothicCoding, monospace" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">usage = MAC</text>
+<text x="825" y="938" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">(원래부터 저장)</text>
+<rect x="1030" y="830" width="210" height="120" rx="8" fill="#e7f5ec" stroke="#2e8b57" stroke-width="2"/>
+<text x="1045" y="858" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="bold" text-anchor="start">데이터 영역 (data)</text>
+<text x="1045" y="886" font-family="NanumGothicCoding, monospace" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">owner =</text>
+<text x="1045" y="912" font-family="NanumGothicCoding, monospace" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">USER+uuid(1001)</text>
+<text x="1045" y="938" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">(이번에 추가, 20B)</text>
+<line x1="1135" y1="830" x2="1135" y2="735" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<text x="1125" y="745" font-family="NanumGothicCoding, monospace" font-size="14" fill="#555555" font-weight="normal" text-anchor="end">TEE_ReadObjectData</text>
+<rect x="40" y="780" width="710" height="190" rx="10" fill="#fafafa" stroke="#bbbbbb" stroke-width="2"/>
+<text x="60" y="810" font-family="NanumGothic, sans-serif" font-size="17" fill="#1d1d1f" font-weight="bold" text-anchor="start">어떻게</text>
+<text x="60" y="834" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">key_create: 호출자 신원 me 를 initialData 로 키와 같이 저장</text>
+<text x="60" y="858" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">key_info / mac_by_id / key_delete: Open 직후 check_owner()</text>
+<text x="60" y="882" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">  (delete 는 READ|WRITE_META 로 open -- READ 없으면 TA panic)</text>
+<text x="60" y="906" font-family="NanumGothic, sans-serif" font-size="17" fill="#c0392b" font-weight="bold" text-anchor="start">한계 (A6)</text>
+<text x="60" y="930" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">신원은 normal world 커널이 uid 로 만든다 -&gt; 커널을 쥔 root 는</text>
+<text x="60" y="954" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">setuid 로 주인 행세 가능. TEE 혼자서는 못 막음.</text>
+</svg>
