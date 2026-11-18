@@ -4,8 +4,8 @@
 
 ## 목표 / 완료 기준
 - [ ] U-Boot **FIT verified boot** — 커널+dtb를 서명하고 U-Boot가 검증
-- [ ] **TF-A 인증 부팅체인**(BL1→BL2 이미지 인증)
-- [ ] 공격 데모: 서명 바이트 flip → "부팅 거부" 확인 (규칙 3)
+- [x] **TF-A 인증 부팅체인**(BL1→BL2 이미지 인증) -- `make arm-tf TF_A_TRUSTED_BOARD_BOOT=y`
+- [x] 공격 데모: 서명 바이트 flip → "부팅 거부" 확인 (규칙 3) -- 아래 [A][B][C]
 - [ ] writeup + "왜": FIT verified boot vs UEFI Secure Boot
 
 ## 위협모델 (← 내가 작성)
@@ -21,6 +21,35 @@
 >   1) 이미지 변조했는데 booting 찍히고 부팅이 계속됨
 >   2) 공개키 교체했는데 해시 비교에서 verify 찍히고 부팅이 계속됨
 >   3) 서명값 교체했는데 이미지 서명 검증에서 통과하고 부팅이 계속됨
+
+## 공격 데모 결과 (2026-11-18, QEMU + TF-A v2.14.0 TBB)
+
+BL1 이 BL2 를 믿기까지 하는 일 (`bl_common.c` load_auth_image_recursive, `auth_mod.c`):
+
+```
+tb_fw.crt = [본문: 루트공개키 | bl2해시 | nv카운터] + [서명 = 루트비밀키로 서명(hash(본문))]
+
+BL1 (1) hash(본문.루트공개키) == OTP 의 ROTPK 해시 ?      auth_mod.c:267
+    (2) 본문.루트공개키로 서명 검증, hash(본문)과 맞나 ?  auth_mod.c:294
+    (3) hash(bl2.bin) == 본문.bl2해시 ?                   id=1 auth_hash
+    셋 다 통과 -> BL2 로 점프
+```
+
+부모(인증서 id=6)를 "로드 -> 검증"한 뒤에야 자식(bl2 id=1)을 로드한다. 그래서 인증서에서 실패하면 bl2 는 읽지도 않는다.
+
+| 실험 | 공격자가 바꾼 것 | 예측 | 실패한 검사 | id=1 로드 | 실패 기준 |
+|---|---|---|---|---|---|
+| [A] | bl2.bin 1바이트 (0x100) | BL1 로그 뒤 정지, 주체 BL1 -- 맞음 | (3) 해시 비교 | 함 | 1 통과 |
+| [B] | tb_fw.crt 서명 1바이트 (1100) | `Loading image id=6` 까지 -- `Image id=6 loaded` 한 줄 더 나옴 | (2) 서명 검증 | 안 함 | 3 통과 |
+| [C] | 공격자 키쌍으로 인증서 새로 생성 + 변조 bl2 | 공개키 해시 비교에서 실패 -- 맞음 (id=1 은 모르겠음) | (1) ROTPK 해시 비교 | 안 함 | 2 통과 |
+
+- 세 경우 모두 마지막 줄은 `ERROR: Failed to load BL2 firmware.` 로 같다. INFO 레벨에선 **직전에 어느 id 까지 로드됐나**로 구분, 원인 줄은 LOG_LEVEL=50(VERBOSE)에서만 나온다 (`[TBB] auth_signature():271 failed`).
+- `Image id=6 loaded` 는 검증 결과가 아니라 파일을 메모리에 다 읽었다는 load_image() 로그다.
+- [C] 에서 공격자 인증서는 자기 공개키로 자기 서명을 보증하는 self-signed 구조라 서명만으론 아무것도 증명 못 한다. 키를 믿는 근거는 (1) OTP 해시뿐 -- 위협모델의 "바꿀 수 없는 것"이 실제로 막은 지점.
+- 검증 실패한 이미지는 메모리에서 0 으로 지운다 (`zero_normalmem`).
+- 미확인: [C] 공격자 인증서의 서명 자체가 유효한지는 (2) 까지 안 가서 이번 실행으로 확인 못 함.
+
+그림: `notes/tbb-attack-{A,B,C}.png` (생성: `notes/tbb-attack.gen.py`)
 
 ## 연결
 - 01의 TEE는 **이 부팅체인만큼만 신뢰**된다. 04의 HSM 키로 여기 이미지를 서명하면 02↔04 연결.
