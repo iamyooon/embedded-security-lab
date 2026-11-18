@@ -1,7 +1,7 @@
 #!/usr/bin/expect -f
 # 헤드리스로 QEMU 부팅 -> 게스트에서 LAB_CMD 실행 -> 종료.
 # qemu-check.exp(xtest 전용)를 내 명령 실행용으로 줄인 것.
-set timeout 300
+set timeout [expr {[info exists ::env(LAB_TIMEOUT)] && $::env(LAB_TIMEOUT) ne "" ? $::env(LAB_TIMEOUT) : 300}]
 set cmd $env(LAB_CMD)
 
 log_file -a -noappend "serial0.log"

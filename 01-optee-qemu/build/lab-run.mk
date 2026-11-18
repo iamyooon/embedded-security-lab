@@ -13,4 +13,5 @@ lab-run:
 		export QEMU_CHECK_ARGS="$(QEMU_CHECK_ARGS)" && \
 		export LAB_CMD="$(LAB_CMD)" && \
 		export LAB_SCRIPT="$(LAB_SCRIPT)" && \
+		export LAB_TIMEOUT="$(LAB_TIMEOUT)" && \
 		expect $(ROOT)/build/lab-run.exp
