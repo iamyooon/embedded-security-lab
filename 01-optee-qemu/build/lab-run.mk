@@ -12,4 +12,5 @@ lab-run:
 		export QEMU=$(QEMU_BIN) && \
 		export QEMU_CHECK_ARGS="$(QEMU_CHECK_ARGS)" && \
 		export LAB_CMD="$(LAB_CMD)" && \
+		export LAB_SCRIPT="$(LAB_SCRIPT)" && \
 		expect $(ROOT)/build/lab-run.exp

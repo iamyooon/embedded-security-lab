@@ -34,7 +34,7 @@
 #define TA_SECURE_MAC_CMD_EXPORT_KEY	3
 
 /*
- * ---- 키 생명주기 (GP Persistent Object, TEE_STORAGE_PRIVATE = QEMU 에선 REE FS /data/tee) ----
+ * ---- 키 생명주기 (GP Persistent Object, TEE_STORAGE_PRIVATE = QEMU 에선 REE FS /var/lib/tee) ----
  * 키 ID = CA 가 정하는 uint32. TA 안에서 objectID(4바이트)로 쓴다. 키 값은 어떤 명령으로도 안 나간다.
  *
  * TA_SECURE_MAC_CMD_KEY_CREATE

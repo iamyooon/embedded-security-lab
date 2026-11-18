@@ -88,7 +88,7 @@ def build():
     # persistent object 그림 (아래)
     py = 760
     o.append(rect(790, py + 20, 470, 190, "#ffffff", C["sw_bd"], rx=10))
-    o.append(text(810, py + 52, "Persistent object id=2  (/data/tee, 암호화)", 17, weight="bold"))
+    o.append(text(810, py + 52, "Persistent object id=2  (/var/lib/tee, 암호화)", 17, weight="bold"))
     o.append(rect(810, py + 70, 210, 120, C["k_bg"], C["k_bd"]))
     o.append(text(825, py + 98, "속성 (attributes)", 16, weight="bold"))
     o.append(text(825, py + 126, "HMAC 키 256bit", 15, font=M))

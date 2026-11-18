@@ -75,7 +75,7 @@
 <rect x="1300" y="630" width="300" height="70" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
 <text x="1450" y="673" font-family="NanumGothicCoding, monospace" font-size="19" fill="#c0392b" font-weight="bold" text-anchor="middle">ACCESS_DENIED</text>
 <rect x="790" y="780" width="470" height="190" rx="10" fill="#ffffff" stroke="#c98a00" stroke-width="2"/>
-<text x="810" y="812" font-family="NanumGothic, sans-serif" font-size="17" fill="#1d1d1f" font-weight="bold" text-anchor="start">Persistent object id=2  (/data/tee, 암호화)</text>
+<text x="810" y="812" font-family="NanumGothic, sans-serif" font-size="17" fill="#1d1d1f" font-weight="bold" text-anchor="start">Persistent object id=2  (/var/lib/tee, 암호화)</text>
 <rect x="810" y="830" width="210" height="120" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2"/>
 <text x="825" y="858" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="bold" text-anchor="start">속성 (attributes)</text>
 <text x="825" y="886" font-family="NanumGothicCoding, monospace" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">HMAC 키 256bit</text>

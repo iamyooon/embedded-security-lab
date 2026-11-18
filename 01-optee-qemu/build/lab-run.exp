@@ -18,6 +18,18 @@ expect "# "
 send -- "export LD_LIBRARY_PATH=/lib:/lib/arm-linux-gnueabihf\r"
 expect "# "
 
+# LAB_SCRIPT (호스트 파일) 가 있으면 한 줄씩 보내고 프롬프트를 기다린다 (2026-11-18, 저장소 공격 데모)
+if {[info exists ::env(LAB_SCRIPT)] && $::env(LAB_SCRIPT) ne ""} {
+	set f [open $::env(LAB_SCRIPT) r]
+	foreach line [split [read $f] "\n"] {
+		if {[string trim $line] eq "" || [string index [string trim $line] 0] eq "#"} { continue }
+		send -- "$line\r"
+		expect -re {\r\n# $}
+	}
+	close $f
+	set cmd "true"
+}
+
 puts "\n--- guest: $cmd ---"
 send -- "$cmd; echo LAB_EXIT=\$?\r"
 set rc 99

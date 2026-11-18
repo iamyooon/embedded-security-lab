@@ -309,6 +309,46 @@ int main(int argc, char *argv[])
 		return rc;
 	}
 
+	/*
+	 * 단일 명령 모드 (저장소 공격 데모용, 2026-11-18):
+	 *   create|info|delete|mac <id>   -> "CMD <name> id=<id> res=0x........ [tag=...]"
+	 * 셸에서 /var/lib/tee 를 건드리는 사이사이에 한 단계씩 부르기 위함.
+	 */
+	if (argc == 3 && strcmp(argv[1], "test")) {
+		uint32_t id = strtoul(argv[2], NULL, 0);
+		const char *c = argv[1];
+
+		res = TEEC_OpenSession(&ctx, &sess, &uuid, TEEC_LOGIN_USER,
+				       NULL, NULL, &err_origin);
+		if (res != TEEC_SUCCESS)
+			errx(1, "TEEC_OpenSession failed 0x%x origin 0x%x",
+			     res, err_origin);
+		if (!strcmp(c, "create")) {
+			res = t_id_only(&sess, TA_SECURE_MAC_CMD_KEY_CREATE, id);
+		} else if (!strcmp(c, "delete")) {
+			res = t_id_only(&sess, TA_SECURE_MAC_CMD_KEY_DELETE, id);
+		} else if (!strcmp(c, "info")) {
+			uint32_t ty = 0, bi = 0, us = 0;
+
+			res = t_info(&sess, id, &ty, &bi, &us);
+			if (res == TEEC_SUCCESS)
+				printf("    type=0x%08x bits=%u usage=0x%08x\n", ty, bi, us);
+		} else if (!strcmp(c, "mac")) {
+			const uint8_t msg[] = "storage-attack-demo";
+			size_t tl = sizeof(tag);
+
+			res = t_mac(&sess, id, msg, sizeof(msg) - 1, tag, &tl);
+			if (res == TEEC_SUCCESS)
+				hexdump("    tag", tag, tl);
+		} else {
+			errx(2, "usage: %s [test | create|info|delete|mac <id>]", argv[0]);
+		}
+		printf("CMD %s id=%u res=0x%08x\n", c, id, res);
+		TEEC_CloseSession(&sess);
+		TEEC_FinalizeContext(&ctx);
+		return res == TEEC_SUCCESS ? 0 : 1;
+	}
+
 	res = TEEC_OpenSession(&ctx, &sess, &uuid, TEEC_LOGIN_PUBLIC,
 			       NULL, NULL, &err_origin);
 	if (res != TEEC_SUCCESS)

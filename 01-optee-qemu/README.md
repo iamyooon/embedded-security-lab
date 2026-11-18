@@ -21,11 +21,11 @@ ARM TrustZone 기반 TEE를 QEMU(`qemu_v8`)에서 부팅하고, **직접 Trusted
 >
 > 키 생명주기(Persistent Object) 추가 (2026-11-18):
 > - 자산: 저장되어있는 기존 키들
-> - 공격자 능력: root는 /data/tee 의 암호화된 키 파일을 읽고 쓸수는 있는데 보이지는 않음.
+> - 공격자 능력: root는 /var/lib/tee 의 암호화된 키 파일을 읽고 쓸수는 있는데 보이지는 않음.
 >   - 할수없는것) 키값을 알아내는 것, 키값을 바꿔치기하는것
 >   - 할수있는것) 지우기, 롤백 (REE FS 로는 못막음)
 > - 실패 기준:
->   1) /data/tee 파일이나 TA API 로 키 값이 보임
+>   1) /var/lib/tee 파일이나 TA API 로 키 값이 보임
 >   2) 변조한 저장 파일을 TA 가 받아들여 MAC 계산에 씀
 >   3) 삭제한 키 ID 로 MAC 계산이 됨
 >
@@ -87,8 +87,26 @@ CA 세션은 `TEEC_LOGIN_USER`, LOGIN_PUBLIC(신원 없음)은 거부. 테스트
 Open 결과 미확인 -> 없는 id 에서 NULL 키로 진행, 실패 경로 Close 누락 -> 핸들 누수.
 
 한계 (안 된 것):
-- 저장 위치는 REE FS(`/data/tee`, `CFG_REE_FS=y`, RPMB 꺼짐). 암호화 키는 HUK 에서 유도되는데 QEMU 는 HUK 를 구현 안 해
+- 저장 위치는 REE FS(`/var/lib/tee` -- buildroot `S30optee` 가 만듦, 처음엔 /data/tee 로 잘못 적었음, `CFG_REE_FS=y`, RPMB 꺼짐). 암호화 키는 HUK 에서 유도되는데 QEMU 는 HUK 를 구현 안 해
   `core/kernel/otp_stubs.c:22` 기본값(전부 0)을 쓴다 -> QEMU 에선 이론상 오프라인 복호화 가능. 실기는 OTP HUK 필요.
-- root 의 파일 삭제/롤백은 못 막는다(위협모델). 저장소 공격 데모(실패 기준 1, 2)는 아직.
+- root 의 파일 삭제/롤백은 못 막는다 -> 아래 저장소 공격 [S3] 에서 실측.
 - 호출자 신원은 normal world 커널이 uid 로 계산해 준다 -> 커널을 쥔 root 는 setuid 로 주인 행세 가능 (A6).
-- `/data/tee` 가 initramfs 라 재부팅하면 사라진다 -> 재부팅 영속성은 미확인(세션 간 영속만 확인).
+- `/var/lib/tee` 가 initramfs 라 재부팅하면 사라진다 -> 재부팅 영속성은 미확인(세션 간 영속만 확인).
+
+### 저장소 공격 -- root 가 /var/lib/tee 를 직접 건드림 (2026-11-18)
+스크립트 `attack/storage-attack.sh` (게스트에서 한 줄씩, `build/lab-run.exp` 의 `LAB_SCRIPT`). 그림: `notes/05-storage-attack.png`.
+키 파일 찾기: 생성 -> 백업 -> 삭제해서 사라지는 파일(`23`, 16KB) -> 백업 복원. (부팅 직후에도 다른 객체 파일이 수십 개 있어 "첫 파일" 로 고르면 엉뚱한 파일을 건드림 -- 1차 시도에서 실제로 그랬음.)
+
+| 실험 | 한 일 | 결과 | 예측 |
+|---|---|---|---|
+| [S1] 읽기 | 키 파일 hexdump / strings | 무작위 바이트, 8자 이상 문자열 2개(우연 수준). 키/owner 안 보임 -> 실패 기준 1 통과 | 맞음 |
+| [S2] 변조 | 데이터 블록 0 의 같은 자리 1바이트를 두 벌(vers 0/1) 모두 뒤집음 | MAC `0xF0100001` CORRUPT_OBJECT, 로그 `Head corrupt` / `Object corrupt`. **이어서 INFO = ITEM_NOT_FOUND, 파일도 사라짐** -> 실패 기준 2 통과, 대신 OP-TEE 가 깨진 객체를 지움 | 거부는 맞음, 삭제는 몰랐음 |
+| [S3] 롤백 | 키 있을 때 백업 -> 삭제 -> 복원 | 삭제 후 ITEM_NOT_FOUND -> 복원 후 MAC SUCCESS, tag 동일. 지운 키가 되살아남 | 맞음 |
+
+해석:
+- 변조는 막지만 결과가 "키 삭제" 라 root 는 1바이트로 키를 없앨 수 있다 (가용성 공격). 무결성 != 가용성.
+  삭제 근거: open 중 CORRUPT_OBJECT 면 `remove_corrupt_obj()` 호출 (`core/tee/tee_svc_storage.c:228-251`).
+- 롤백이 되는 이유: 파일 해시는 `dirf.db` 가 들고 있는데 `dirf.db` 자체를 고정할 기준(앵커)이 없다 (`CFG_REE_FS_INTEGRITY_RPMB=n`, `core/tee/tee_ree_fs.c:552`).
+  실기 대책: RPMB 에 `dirf.db` 해시를 두거나(`CFG_REE_FS_INTEGRITY_RPMB=y`) RPMB FS 사용 -- 소스/설정만 확인, 안 돌려봄.
+- REE FS 는 헤더/노드/데이터 블록을 두 벌(vers 0/1) 두고 번갈아 쓴다 (`tee_ree_fs.c get_offs_size`) -> 1바이트 변조 실험은 두 벌 모두 건드려야 확실.
+

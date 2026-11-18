@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="960" viewBox="0 0 1640 960">
+<defs><marker id="ah" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#777"/></marker></defs>
+<rect width="1640" height="960" fill="#ffffff"/>
+<text x="40" y="50" font-family="NanumGothic, sans-serif" font-size="28" fill="#1d1d1f" font-weight="bold" text-anchor="start">01 저장소 공격 -- root 가 /var/lib/tee 파일을 직접 건드린다</text>
+<text x="40" y="84" font-family="NanumGothic, sans-serif" font-size="17" fill="#555555" font-weight="normal" text-anchor="start">설정: CFG_REE_FS=y, CFG_RPMB_FS=n, CFG_REE_FS_INTEGRITY_RPMB=n  (dirf.db 를 고정해 줄 RPMB 앵커 없음)</text>
+<rect x="40" y="120" width="1560" height="230" rx="12" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
+<text x="60" y="152" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">Secure world (OP-TEE OS)</text>
+<rect x="70" y="175" width="300" height="150" rx="8" fill="#ffffff" stroke="#c98a00" stroke-width="2"/>
+<text x="90" y="207" font-family="NanumGothic, sans-serif" font-size="17" fill="#1d1d1f" font-weight="bold" text-anchor="start">HUK (기기 고유키)</text>
+<text x="90" y="235" font-family="NanumGothic, sans-serif" font-size="15" fill="#c0392b" font-weight="normal" text-anchor="start">QEMU: 전부 0 (otp_stubs.c)</text>
+<text x="90" y="263" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">-&gt; TA 별 저장 키 TSK 유도</text>
+<text x="90" y="291" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">-&gt; 파일마다 FEK 로 암호화</text>
+<line x1="370" y1="250" x2="470" y2="250" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="470" y="175" width="520" height="150" rx="8" fill="#ffffff" stroke="#c98a00" stroke-width="2"/>
+<text x="490" y="207" font-family="NanumGothic, sans-serif" font-size="17" fill="#1d1d1f" font-weight="bold" text-anchor="start">secure storage 계층</text>
+<text x="490" y="235" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">쓰기: 암호화 + 해시 -&gt; RPC 로 파일 저장 요청</text>
+<text x="490" y="263" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">읽기: 파일 해시 == dirf.db 에 적힌 해시 ?</text>
+<text x="490" y="291" font-family="NanumGothic, sans-serif" font-size="15" fill="#c0392b" font-weight="normal" text-anchor="start">      dirf.db 자체는 무엇과 비교? -&gt; 앵커 없음</text>
+<line x1="990" y1="250" x2="1090" y2="250" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1090" y="175" width="480" height="150" rx="8" fill="#ffffff" stroke="#c98a00" stroke-width="2"/>
+<text x="1110" y="207" font-family="NanumGothic, sans-serif" font-size="17" fill="#1d1d1f" font-weight="bold" text-anchor="start">secure_mac TA</text>
+<text x="1110" y="235" font-family="NanumGothicCoding, monospace" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">MAC_BY_ID / KEY_INFO / KEY_DELETE</text>
+<text x="1110" y="263" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">Open 실패 코드가 그대로 CA 로</text>
+<line x1="40" y1="385" x2="1600" y2="385" stroke="#999" stroke-width="2" stroke-dasharray="10,6"/>
+<text x="1600" y="377" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="end">SMC / RPC (tee-supplicant 가 파일 I/O 대행)</text>
+<rect x="40" y="410" width="1560" height="210" rx="12" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2"/>
+<text x="60" y="442" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">Normal world: /var/lib/tee (root 읽기/쓰기 가능)</text>
+<rect x="70" y="465" width="420" height="130" rx="8" fill="#ffffff" stroke="#3b6fb6" stroke-width="2"/>
+<text x="90" y="497" font-family="NanumGothicCoding, monospace" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">dirf.db</text>
+<text x="90" y="525" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">목록: (TA uuid, 객체 id) -&gt; 파일 번호</text>
+<text x="90" y="553" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">+ 각 파일의 해시</text>
+<text x="90" y="581" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">(암호화 + 무결성 보호)</text>
+<line x1="490" y1="530" x2="590" y2="530" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="590" y="465" width="420" height="130" rx="8" fill="#ffffff" stroke="#3b6fb6" stroke-width="2"/>
+<text x="610" y="497" font-family="NanumGothicCoding, monospace" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">0, 1, 2 ...  (객체 파일)</text>
+<text x="610" y="525" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">속성: 키 값 / usage</text>
+<text x="610" y="553" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">데이터: owner 신원 20B</text>
+<text x="610" y="581" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">(FEK 로 암호화, 해시 트리)</text>
+<line x1="780" y1="465" x2="780" y2="330" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="480" y1="465" x2="480" y2="330" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="40" y="660" width="500" height="170" rx="10" fill="#e7f5ec" stroke="#2e8b57" stroke-width="2"/>
+<text x="60" y="694" font-family="NanumGothic, sans-serif" font-size="20" fill="#2e8b57" font-weight="bold" text-anchor="start">[S1] 읽기  -- 막힘</text>
+<text x="60" y="726" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">키 파일 hexdump / strings</text>
+<text x="60" y="762" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="bold" text-anchor="start">결과: 무작위 바이트, 키/owner 안 보임</text>
+<text x="60" y="800" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">실패 기준 1 통과  (예측 맞음)</text>
+<line x1="290" y1="660" x2="290" y2="625" stroke="#c0392b" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="570" y="660" width="500" height="170" rx="10" fill="#e7f5ec" stroke="#2e8b57" stroke-width="2"/>
+<text x="590" y="694" font-family="NanumGothic, sans-serif" font-size="20" fill="#2e8b57" font-weight="bold" text-anchor="start">[S2] 변조  -- 막힘</text>
+<text x="590" y="726" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">데이터 블록 1바이트 (두 벌 모두)</text>
+<text x="590" y="762" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="bold" text-anchor="start">결과: MAC 0xF0100001 CORRUPT_OBJECT</text>
+<text x="590" y="800" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">-&gt; OP-TEE 가 객체 삭제 (가용성 공격)</text>
+<line x1="820" y1="660" x2="820" y2="625" stroke="#c0392b" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1100" y="660" width="500" height="170" rx="10" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+<text x="1120" y="694" font-family="NanumGothic, sans-serif" font-size="20" fill="#c0392b" font-weight="bold" text-anchor="start">[S3] 롤백  -- 뚫림</text>
+<text x="1120" y="726" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="normal" text-anchor="start">백업 -&gt; 삭제 -&gt; 백업 복원</text>
+<text x="1120" y="762" font-family="NanumGothic, sans-serif" font-size="16" fill="#1d1d1f" font-weight="bold" text-anchor="start">결과: MAC SUCCESS, tag 동일</text>
+<text x="1120" y="800" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">지운 키 부활 = 못 막음 (예측 맞음)</text>
+<line x1="1350" y1="660" x2="1350" y2="625" stroke="#c0392b" stroke-width="2" marker-end="url(#ah)"/>
+<text x="40" y="880" font-family="NanumGothic, sans-serif" font-size="16" fill="#555555" font-weight="normal" text-anchor="start">공격자 = normal world root. 키 파일 = 생성 후 삭제해서 사라지는 파일 (/var/lib/tee/23, 16KB). 근거: tee_svc_storage.c remove_corrupt_obj / tee_ree_fs.c:552</text>
+<text x="40" y="908" font-family="NanumGothic, sans-serif" font-size="16" fill="#555555" font-weight="normal" text-anchor="start">S2 는 무결성은 지키지만 키를 지운다. S3 를 막으려면 dirf.db 앵커(RPMB) 필요.</text>
+</svg>
