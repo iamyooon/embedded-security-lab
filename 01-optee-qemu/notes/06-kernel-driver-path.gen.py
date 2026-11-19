@@ -20,7 +20,7 @@ C = {
     "ok_bg": "#e7f5ec", "ok_bd": "#2e8b57",
     "txt": "#1d1d1f", "sub": "#555555", "arrow": "#777777",
 }
-W, H = 1640, 1200
+W, H = 1640, 1310
 
 
 def text(x, y, s, size=16, color=None, weight="normal", font=F, anchor="start"):
@@ -65,36 +65,38 @@ def build():
          text(40, 78, "실선 = CA 가 일을 시키는 길 (/dev/tee0).  초록 점선 = OP-TEE 가 tee-supplicant 에 심부름 시키는 길 (/dev/teepriv0).  소스 추적만 함.",
               16, C["sub"])]
 
-    lane(o, 100, 180, "EL0  normal 사용자", "사용자 공간", "#f7faff")
+    D = 110  # EL0 를 두 줄로 늘린 만큼 아래 레인을 내림
+    lane(o, 100, 290, "EL0  normal 사용자", "사용자 공간", "#f7faff")
+
+    # EL0 1줄: 앱 / 데몬
+    box(o, 220, 115, 560, 130, "u", "secure_mac CA (host/main.c)", [
+        "TEEC_OpenSession(.., TEEC_LOGIN_USER)",
+        "TEEC_InvokeCommand(MAC_BY_ID, MEMREF_TEMP_INPUT msg,",
+        "                   MEMREF_TEMP_OUTPUT tag)"])
+    box(o, 1210, 115, 385, 170, "ok", "tee-supplicant (데몬)", [
+        "/dev/teepriv0 직접 open  :492",
+        "ioctl(SUPPL_RECV) 대기    :542",
+        "FS(:668) -> /var/lib/tee",
+        "LOAD_TA(:665) -> optee_armtz",
+        "ioctl(SUPPL_SEND) 결과    :559",
+        "~libteec 은 링크만, 이 ioctl 은 직접"])
+    # EL0 2줄: 라이브러리
+    box(o, 220, 265, 700, 115, "u", "libteec (tee_client_api.c)  -- CA 아래 라이브러리", [
+        "OpenSession -> ioctl(TEE_IOC_OPEN_SESSION) :641",
+        "tmpref -> teec_pre_process_tmpref() :192 -> ioctl(TEE_IOC_SHM_REGISTER)",
+        "Invoke -> ioctl(TEE_IOC_INVOKE) :728"])
+    o.append(arrow(500, 245, 500, 265))
+
+    o.append(f'<g transform="translate(0,{D})">')
     lane(o, 295, 395, "EL1  normal 커널", "/dev/tee0 -> TEE 코어 -> OP-TEE 드라이버", "#f3f6fb")
     lane(o, 705, 130, "EL3  TF-A BL31", "secure monitor", "#f6f6f6")
     lane(o, 850, 250, "S-EL1 / S-EL0", "OP-TEE OS -> TA", "#fffaf0")
-
-    # EL0
-    box(o, 220, 115, 420, 150, "u", "secure_mac CA (host/main.c)", [
-        "TEEC_OpenSession(.., TEEC_LOGIN_USER)",
-        "TEEC_InvokeCommand(MAC_BY_ID,",
-        "   MEMREF_TEMP_INPUT msg,",
-        "   MEMREF_TEMP_OUTPUT tag)"])
-    box(o, 700, 115, 560, 150, "u", "libteec (tee_client_api.c)", [
-        "OpenSession -> ioctl(TEE_IOC_OPEN_SESSION)   :641",
-        "tmpref -> teec_pre_process_tmpref()          :192",
-        "   -> ioctl(TEE_IOC_SHM_REGISTER) (CA 버퍼 등록)",
-        "Invoke -> ioctl(TEE_IOC_INVOKE)               :728"])
-    o.append(arrow(640, 190, 700, 190))
-    box(o, 1285, 115, 310, 150, "ok", "tee-supplicant (데몬)", [
-        "open /dev/teepriv0",
-        "ioctl(SUPPL_RECV) 대기  :542",
-        "FS(:668) -> /var/lib/tee",
-        "LOAD_TA(:665) -> optee_armtz",
-        "ioctl(SUPPL_SEND) 결과  :559"])
 
     # EL1
     box(o, 220, 360, 400, 130, "k", "tee_core.c  tee_ioctl()", [
         "case TEE_IOC_OPEN_SESSION   :980",
         "case TEE_IOC_SHM_REGISTER   :976",
         "case TEE_IOC_INVOKE -> tee_ioctl_invoke  :982"])
-    o.append(arrow(900, 265, 520, 360))
     box(o, 220, 510, 400, 165, "bad", "(a) 신원 = 커널이 정함", [
         "optee_open_session (call.c:362)",
         " -> tee_session_calc_client_uuid",
@@ -121,12 +123,6 @@ def build():
     o.append('<polyline points="560,360 560,342 1300,342" fill="none" stroke="#777" stroke-width="2"/>')
     o.append(arrow(1300, 342, 1300, 360))
     o.append(text(930, 336, "TEE_IOC_INVOKE", 13, C["sub"], anchor="middle"))
-
-    o.append(arrow(1500, 360, 1500, 265, "#2e8b57", dash=True))
-    o.append(arrow(1560, 265, 1560, 360, "#2e8b57", dash=True))
-    o.append(text(1495, 300, "RPC 요청", 13, "#2e8b57", anchor="end"))
-    o.append(text(1565, 300, "결과", 13, "#2e8b57"))
-    o.append(text(1495, 318, "supp.c:85 큐잉", 12, C["sub"], anchor="end"))
 
     # EL3
     box(o, 1120, 720, 470, 100, "m", "opteed_smc_handler (opteed_main.c:608)", [
@@ -161,9 +157,21 @@ def build():
         "S1-S3: 저장 I/O 는 (c) RPC 로 tee-supplicant 가",
         "    대행 -> 암호문만 다룸, 롤백은 root 손안"], mono=False)
 
-    o.append(text(40, 1130, "근거: libteec tee_client_api.c, linux drivers/tee/{tee_core.c, tee_shm.c, optee/call.c, optee/smc_abi.c}, "
+    o.append("</g>")
+    # libteec -> 커널 (전역 좌표)
+    o.append(arrow(420, 380, 420, 360 + D))
+    o.append(text(430, 430, "/dev/tee0", 13, C["sub"]))
+    # tee-supplicant <-> (c) SMC 루프 (전역 좌표)
+    o.append(arrow(1500, 360 + D, 1500, 285, "#2e8b57", dash=True))
+    o.append(arrow(1560, 285, 1560, 360 + D, "#2e8b57", dash=True))
+    o.append(text(1495, 330, "RPC 요청", 13, "#2e8b57", anchor="end"))
+    o.append(text(1565, 330, "결과", 13, "#2e8b57"))
+    o.append(text(1495, 348, "supp.c:85 큐잉", 12, C["sub"], anchor="end"))
+    o.append(text(1495, 366, "/dev/teepriv0", 12, C["sub"], anchor="end"))
+
+    o.append(text(40, 1130 + D, "근거: libteec tee_client_api.c, linux drivers/tee/{tee_core.c, tee_shm.c, optee/call.c, optee/smc_abi.c}, "
                   "TF-A services/spd/opteed/opteed_main.c,", 14, C["sub"]))
-    o.append(text(40, 1152, "      optee_os core/arch/arm/kernel/thread_optee_smc.c, core/tee/entry_std.c "
+    o.append(text(40, 1152 + D, "      optee_os core/arch/arm/kernel/thread_optee_smc.c, core/tee/entry_std.c "
                   "(줄 번호는 이 리포 optee/ 트리 기준, 2026-11-19)", 14, C["sub"]))
     o.append("</svg>")
     return "\n".join(o)
