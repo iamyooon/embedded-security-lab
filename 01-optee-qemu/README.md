@@ -6,7 +6,7 @@ ARM TrustZone 기반 TEE를 QEMU(`qemu_v8`)에서 부팅하고, **직접 Trusted
 - [x] OP-TEE `qemu_v8` 스택 빌드 → secure+normal world 부팅, `xtest` 통과 -- 전체 xtest(regression+pkcs11) 153 케이스 / 43582 서브테스트 0 실패 (2026-11-18, TBB + FIT U-Boot 체인 위에서)
 - [x] **내가 만든 TA + 호스트앱** 동작 (예: 키가 secure world 밖으로 안 나가는 서비스) -- secure_mac + 키 생명주기 + 호출자별 접근 제어
 - [x] 공격 데모: normal world(root)에서 secret을 못 꺼냄을 보인다 -- EXPORT_KEY -> TA panic, TARGET_DEAD
-- [ ] writeup: world-switch(SMC→EL3→S-EL1) 흐름을 내 말로
+- [x] writeup: world-switch(SMC→EL3→S-EL1) 흐름을 내 말로 -- [notes/writeup.md](notes/writeup.md) (경계, world switch, 키 반출 차단, 저장, 접근 제어, 2분 답변)
 - [ ] "왜": TEE vs TPM vs HSM — 이 문제엔 왜 TEE인가
 
 ## 위협모델 (← 내가 작성한다: 규칙 2)
