@@ -107,6 +107,7 @@ Open 결과 미확인 -> 없는 id 에서 NULL 키로 진행, 실패 경로 Clos
   `core/kernel/otp_stubs.c:22` 기본값(전부 0)을 쓴다 -> QEMU 에선 이론상 오프라인 복호화 가능. 실기는 OTP HUK 필요.
 - root 의 파일 삭제/롤백은 못 막는다 -> 아래 저장소 공격 [S3] 에서 실측.
 - 호출자 신원은 normal world 커널이 uid 로 계산해 준다 -> 커널을 쥔 root 는 setuid 로 주인 행세 가능 (A6).
+- 삭제 시 메모리 소거 (소스로 확인, 실행 검증은 안 함, 2026-11-19): 객체를 닫거나 지우면 `tee_obj_free()` -> `tee_obj_attr_free()` -> HMAC 키 같은 secret 속성은 `op_attr_secret_value_clear()` 가 `memzero_explicit` 로 지운다 (`core/tee/tee_svc_cryp.c:833-838`, `.free` 지정 1137, `core/tee/tee_obj.c:79-85`). 이건 OP-TEE 코어(S-EL1) 메모리의 사본 얘기다. 디스크(REE FS)의 암호문 파일은 tee-supplicant 가 `unlinkat()` 만 한다(덮어쓰기 없음, `optee_client/tee-supplicant/src/tee_supp_fs.c:437`) -- 블록에 남은 암호문 + QEMU 의 HUK=0 이면 이론상 복구 여지 (미확인).
 - `/var/lib/tee` 가 initramfs 라 재부팅하면 사라진다 -> 재부팅 영속성은 미확인(세션 간 영속만 확인).
 
 ### 저장소 공격 -- root 가 /var/lib/tee 를 직접 건드림 (2026-11-18)
