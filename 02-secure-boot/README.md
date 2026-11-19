@@ -46,6 +46,15 @@ BL1 (1) hash(본문.루트공개키) == OTP 의 ROTPK 해시 ?      auth_mod.c:2
 | [C] | 공격자 키쌍으로 인증서 새로 생성 + 변조 bl2 | 공개키 해시 비교에서 실패 -- 맞음 (id=1 은 모르겠음) | (1) ROTPK 해시 비교 | 안 함 | 2 통과 |
 
 - 세 경우 모두 마지막 줄은 `ERROR: Failed to load BL2 firmware.` 로 같다. INFO 레벨에선 **직전에 어느 id 까지 로드됐나**로 구분, 원인 줄은 LOG_LEVEL=50(VERBOSE)에서만 나온다 (`[TBB] auth_signature():271 failed`).
+- LOG_LEVEL=50 재실행 (2026-11-19, [A][B] 추가) -- 원인 줄로 셋이 갈린다. 예측(A: 다른 함수 + 코드 2, B: 271 과 다른 줄) 맞음.
+
+  | 실험 | id=1 로드 | VERBOSE 원인 줄 | 에러 코드 (`crypto_mod.h`) |
+  |---|---|---|---|
+  | [A] | 함 | `auth_hash():122` | 2 CRYPTO_ERR_HASH |
+  | [B] | 안 함 | `auth_signature():301` (서명 검증) | 3 CRYPTO_ERR_SIGNATURE |
+  | [C] | 안 함 | `auth_signature():271` (ROTPK 해시 비교) | 2 CRYPTO_ERR_HASH |
+
+  [A] 와 [C] 는 코드가 같아 함수/줄로 구분해야 한다. 양산 빌드는 VERBOSE 가 꺼져 있으니 id 로 좁히고 VERBOSE 빌드로 재현하는 순서.
 - `Image id=6 loaded` 는 검증 결과가 아니라 파일을 메모리에 다 읽었다는 load_image() 로그다.
 - [C] 에서 공격자 인증서는 자기 공개키로 자기 서명을 보증하는 self-signed 구조라 서명만으론 아무것도 증명 못 한다. 키를 믿는 근거는 (1) OTP 해시뿐 -- 위협모델의 "바꿀 수 없는 것"이 실제로 막은 지점.
 - 검증 실패한 이미지는 메모리에서 0 으로 지운다 (`zero_normalmem`).

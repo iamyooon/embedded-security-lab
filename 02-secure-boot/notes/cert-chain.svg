@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="1000" viewBox="0 0 1640 1000">
+<defs><marker id="ah" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#777"/></marker></defs>
+<rect width="1640" height="1000" fill="#ffffff"/>
+<text x="40" y="50" font-family="NanumGothic, sans-serif" font-size="28" fill="#1d1d1f" font-weight="bold" text-anchor="start">TF-A 인증서 체인 -- 누가 무엇을 검증하고, 인증서 안에 무엇이 들었나</text>
+<text x="40" y="84" font-family="NanumGothic, sans-serif" font-size="17" fill="#555555" font-weight="normal" text-anchor="start">인증서 = 다음 단계의 공개키 또는 이미지 해시를 담고, 부모가 준 공개키로 서명 검증된다. 루트 인증서 2개만 ROTPK 와 대조.</text>
+<rect x="40" y="330" width="310" height="200" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2"/>
+<text x="54" y="356" font-family="NanumGothicCoding, monospace" font-size="17" fill="#666666" font-weight="bold" text-anchor="start">ROTPK 해시</text>
+<text x="54" y="380" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">= ROT 공개키의 SHA-256</text>
+<text x="54" y="402" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">실기기: OTP / eFuse</text>
+<text x="54" y="424" font-family="NanumGothic, sans-serif" font-size="15" fill="#c0392b" font-weight="normal" text-anchor="start">QEMU: BL1 이미지에 내장</text>
+<text x="54" y="446" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">  (qemu_rotpk.S)</text>
+<text x="54" y="468" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">BL1, BL2 둘 다 링크</text>
+<text x="54" y="490" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">plat_get_rotpk_info()</text>
+<rect x="390" y="115" width="1220" height="200" rx="12" fill="#fafafa" stroke="#bbbbbb" stroke-width="2"/>
+<text x="410" y="143" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">BL1 (ROM) 이 검증</text>
+<rect x="420" y="160" width="400" height="135" rx="8" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
+<text x="434" y="186" font-family="NanumGothicCoding, monospace" font-size="17" fill="#c98a00" font-weight="bold" text-anchor="start">tb_fw.crt  (루트)</text>
+<text x="434" y="210" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">서명: ROT 비밀키</text>
+<text x="434" y="232" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">담은 것: ROT 공개키, hash(BL2)</text>
+<text x="434" y="254" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">검증: 공개키 해시 == ROTPK ? -&gt; 서명 ?</text>
+<line x1="820" y1="228" x2="890" y2="228" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<text x="855" y="218" font-family="NanumGothic, sans-serif" font-size="13" fill="#555555" font-weight="normal" text-anchor="middle">hash</text>
+<rect x="890" y="160" width="260" height="135" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2"/>
+<text x="904" y="186" font-family="NanumGothicCoding, monospace" font-size="17" fill="#3b6fb6" font-weight="bold" text-anchor="start">BL2</text>
+<text x="904" y="210" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">hash(bl2.bin) ==</text>
+<text x="904" y="232" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">tb_fw.crt 의 값 ?</text>
+<text x="904" y="254" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">-&gt; 맞으면 실행</text>
+<rect x="1180" y="160" width="410" height="135" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+<text x="1194" y="186" font-family="NanumGothicCoding, monospace" font-size="17" fill="#c0392b" font-weight="bold" text-anchor="start">[C] 여기서 막힘</text>
+<text x="1194" y="210" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">공격자 키로 만든 tb_fw.crt</text>
+<text x="1194" y="232" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">hash(BL2) 는 맞음, 서명도 자기 키로는 맞음</text>
+<text x="1194" y="254" font-family="NanumGothic, sans-serif" font-size="15" fill="#c0392b" font-weight="normal" text-anchor="start">공개키 해시 != ROTPK -&gt; 거부</text>
+<rect x="390" y="340" width="1220" height="600" rx="12" fill="#fafafa" stroke="#bbbbbb" stroke-width="2"/>
+<text x="410" y="368" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">BL2 가 검증 (key 인증서 -&gt; content 인증서 -&gt; 이미지)</text>
+<rect x="420" y="470" width="350" height="180" rx="8" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
+<text x="434" y="496" font-family="NanumGothicCoding, monospace" font-size="17" fill="#c98a00" font-weight="bold" text-anchor="start">trusted_key.crt  (루트)</text>
+<text x="434" y="520" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">서명: ROT 비밀키</text>
+<text x="434" y="542" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">담은 것:</text>
+<text x="434" y="564" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">  trusted_world 공개키</text>
+<text x="434" y="586" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">  non_trusted_world 공개키</text>
+<text x="434" y="608" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">검증: 공개키 해시 == ROTPK ?</text>
+<line x1="770" y1="560" x2="840" y2="440" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="840" y="390" width="290" height="110" rx="8" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
+<text x="854" y="416" font-family="NanumGothicCoding, monospace" font-size="16" fill="#c98a00" font-weight="bold" text-anchor="start">soc_fw_key.crt</text>
+<text x="854" y="440" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">서명: trusted_world 키</text>
+<text x="854" y="462" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">담음: soc_fw_content_pk</text>
+<line x1="1130" y1="445" x2="1160" y2="445" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1160" y="390" width="250" height="110" rx="8" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
+<text x="1174" y="416" font-family="NanumGothicCoding, monospace" font-size="16" fill="#c98a00" font-weight="bold" text-anchor="start">soc_fw_content.crt</text>
+<text x="1174" y="440" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">서명: 왼쪽 content_pk</text>
+<text x="1174" y="462" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">담음: hash(BL31)</text>
+<line x1="1410" y1="445" x2="1440" y2="445" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1440" y="390" width="150" height="110" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2"/>
+<text x="1454" y="416" font-family="NanumGothicCoding, monospace" font-size="16" fill="#3b6fb6" font-weight="bold" text-anchor="start">BL31</text>
+<text x="1454" y="440" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">EL3 모니터</text>
+<text x="1454" y="462" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">hash 대조</text>
+<line x1="770" y1="560" x2="840" y2="580" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="840" y="530" width="290" height="110" rx="8" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
+<text x="854" y="556" font-family="NanumGothicCoding, monospace" font-size="16" fill="#c98a00" font-weight="bold" text-anchor="start">tos_fw_key.crt</text>
+<text x="854" y="580" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">서명: trusted_world 키</text>
+<text x="854" y="602" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">담음: tos_fw_content_pk</text>
+<line x1="1130" y1="585" x2="1160" y2="585" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1160" y="530" width="250" height="110" rx="8" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
+<text x="1174" y="556" font-family="NanumGothicCoding, monospace" font-size="16" fill="#c98a00" font-weight="bold" text-anchor="start">tos_fw_content.crt</text>
+<text x="1174" y="580" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">서명: 왼쪽 content_pk</text>
+<text x="1174" y="602" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">담음: hash(BL32)</text>
+<line x1="1410" y1="585" x2="1440" y2="585" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1440" y="530" width="150" height="110" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2"/>
+<text x="1454" y="556" font-family="NanumGothicCoding, monospace" font-size="16" fill="#3b6fb6" font-weight="bold" text-anchor="start">BL32</text>
+<text x="1454" y="580" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">OP-TEE OS</text>
+<text x="1454" y="602" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">hash 대조</text>
+<line x1="770" y1="560" x2="840" y2="720" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="840" y="670" width="290" height="110" rx="8" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
+<text x="854" y="696" font-family="NanumGothicCoding, monospace" font-size="16" fill="#c98a00" font-weight="bold" text-anchor="start">nt_fw_key.crt</text>
+<text x="854" y="720" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">서명: non_trusted 키</text>
+<text x="854" y="742" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">담음: nt_fw_content_pk</text>
+<line x1="1130" y1="725" x2="1160" y2="725" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1160" y="670" width="250" height="110" rx="8" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
+<text x="1174" y="696" font-family="NanumGothicCoding, monospace" font-size="16" fill="#c98a00" font-weight="bold" text-anchor="start">nt_fw_content.crt</text>
+<text x="1174" y="720" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">서명: 왼쪽 content_pk</text>
+<text x="1174" y="742" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">담음: hash(BL33)</text>
+<line x1="1410" y1="725" x2="1440" y2="725" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1440" y="670" width="150" height="110" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2"/>
+<text x="1454" y="696" font-family="NanumGothicCoding, monospace" font-size="16" fill="#3b6fb6" font-weight="bold" text-anchor="start">BL33</text>
+<text x="1454" y="720" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">U-Boot</text>
+<text x="1454" y="742" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">hash 대조</text>
+<line x1="1515" y1="780" x2="1515" y2="810" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1160" y="810" width="430" height="110" rx="8" fill="#e7f5ec" stroke="#2e8b57" stroke-width="2"/>
+<text x="1174" y="836" font-family="NanumGothicCoding, monospace" font-size="16" fill="#2e8b57" font-weight="bold" text-anchor="start">kernel.itb (FIT) -- U-Boot 이 검증 [D]</text>
+<text x="1174" y="860" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">공개키: u-boot.dtb 안 (BL33 해시가 덮음)</text>
+<text x="1174" y="882" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">TF-A 인증서 체인 밖, 별도 FIT 키</text>
+<rect x="420" y="790" width="700" height="130" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2"/>
+<text x="434" y="816" font-family="NanumGothicCoding, monospace" font-size="16" fill="#666666" font-weight="bold" text-anchor="start">규칙</text>
+<text x="434" y="840" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">부모 인증서가 담은 공개키로 자식 인증서 서명을 검증한다.</text>
+<text x="434" y="862" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">부모가 없는 루트 인증서(parent=NULL)만 ROTPK 해시와 대조한다.</text>
+<text x="434" y="884" font-family="NanumGothic, sans-serif" font-size="15" fill="#1d1d1f" font-weight="normal" text-anchor="start">이미지는 서명이 없고, 바로 위 인증서의 해시와만 비교한다.</text>
+<line x1="350" y1="380" x2="420" y2="250" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#ah)"/>
+<line x1="350" y1="480" x2="420" y2="540" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#ah)"/>
+<text x="40" y="970" font-family="NanumGothic, sans-serif" font-size="15" fill="#555555" font-weight="normal" text-anchor="start">근거: drivers/auth/tbbr/tbbr_cot_{common,bl1,bl2}.c (parent / pk / 담는 값), auth_mod.c:217-246 (ROTPK 대조), plat/qemu/common/qemu_rotpk.S</text>
+</svg>
