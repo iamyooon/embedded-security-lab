@@ -1,0 +1,11 @@
+# OpenSSL 이 pkcs11 engine 을 SoftHSM 모듈로 로드하게 하는 설정 (mkimage -N pkcs11 용)
+openssl_conf = openssl_init
+[openssl_init]
+engines = engine_section
+[engine_section]
+pkcs11 = pkcs11_section
+[pkcs11_section]
+engine_id = pkcs11
+dynamic_path = /usr/lib/x86_64-linux-gnu/engines-3/pkcs11.so
+MODULE_PATH = /usr/lib/softhsm/libsofthsm2.so
+init = 0
