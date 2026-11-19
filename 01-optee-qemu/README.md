@@ -61,7 +61,7 @@ secure_mac을 TPM이나 HSE로 만들려고 하면 check_owner 함수를 구현�
 
 ### secure_mac (transient 키, 2026-11-17)
 `optee_example_secure_mac` -> [1] GEN_KEY [2] MAC [3] VERIFY 정상 valid=1 [4] VERIFY 변조 valid=0 [5] EXPORT_KEY 거부(0xFFFF3024, origin 3).
-키는 세션 수명이라 실행마다 tag 가 다르다. 흐름 그림: `notes/03-ca-ta-code-flow.png`.
+키는 세션 수명이라 실행마다 tag 가 다르다. 흐름 그림: `notes/03-ca-ta-code-flow.png`. 그 사이 커널 TEE 드라이버 -> EL3 -> OP-TEE 경로(신원 euid, 버퍼 pin, SMC/RPC 루프, tee-supplicant): `notes/06-kernel-driver-path.png` (소스 추적, 2026-11-19).
 
 ### 키 생명주기 -- GP Persistent Object (2026-11-18)
 JD "Key 생성, 저장, 조회, 삭제"에 대응. 키는 id(uint32)로만 가리키고 값은 어떤 명령으로도 안 나간다.
