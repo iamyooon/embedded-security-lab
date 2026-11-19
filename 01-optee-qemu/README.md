@@ -7,7 +7,7 @@ ARM TrustZone 기반 TEE를 QEMU(`qemu_v8`)에서 부팅하고, **직접 Trusted
 - [x] **내가 만든 TA + 호스트앱** 동작 (예: 키가 secure world 밖으로 안 나가는 서비스) -- secure_mac + 키 생명주기 + 호출자별 접근 제어
 - [x] 공격 데모: normal world(root)에서 secret을 못 꺼냄을 보인다 -- EXPORT_KEY -> TA panic, TARGET_DEAD
 - [x] writeup: world-switch(SMC→EL3→S-EL1) 흐름을 내 말로 -- [notes/writeup.md](notes/writeup.md) (경계, world switch, 키 반출 차단, 저장, 접근 제어, 2분 답변)
-- [ ] "왜": TEE vs TPM vs HSM — 이 문제엔 왜 TEE인가
+- [x] "왜": TEE vs TPM vs HSM — 이 문제엔 왜 TEE인가 -- 아래 "왜 TEE인가" 절 (HSE 포함)
 
 ## 위협모델 (← 내가 작성한다: 규칙 2)
 > 여기에 직접 채워넣기:
@@ -31,6 +31,22 @@ ARM TrustZone 기반 TEE를 QEMU(`qemu_v8`)에서 부팅하고, **직접 Trusted
 >
 > 호출자별 접근 제어 추가 (2026-11-18):
 > - 못막는것) 일반 앱(다른 uid)은 막음, root는 주인 uid로 바꿔 쓸 수 있어 못 막음
+
+## 왜 TEE인가 (TEE vs TPM vs HSM vs HSE)
+
+가르는 기준: 키가 어디 사나 / 안에서 누구 코드가 도나 / 메인 CPU 와 얼마나 떨어져 있나.
+
+| | 위치 | 안에서 도는 코드 | 메인 CPU 와의 분리 | 대표 용도 |
+|---|---|---|---|---|
+| TEE (TrustZone) | 같은 SoC, 같은 코어를 시간 분할 | 내가 만든 임의의 TA | 약함: 코어/캐시 공유 -> 부채널 | 모바일 결제, DRM, 키스토어, secure_mac |
+| TPM | 별도 칩 (또는 fTPM) | 정해진 TCG 명령만 | 강함: 별도 칩, 단 버스 노출 | 측정 부팅, sealing, attestation |
+| HSM | 별도 장비/카드 (서버) | 벤더 펌웨어, 정해진 PKCS#11 기능 | 매우 강함: 변조 감지, FIPS 인증 | CA/펌웨어 서명키 보관 |
+| HSE (차량용 내장 HSM) | 같은 칩 안 별도 보안 코어 | 칩 벤더 펌웨어, 정해진 서비스 | 강함: 전용 코어/메모리 | ECU 키 저장, SecOC, 시큐어 부트 |
+
+(HSE 행은 공개 제품 소개 수준의 일반 정리)
+
+내 결론:
+secure_mac을 TPM이나 HSE로 만들려고 하면 check_owner 함수를 구현하는 것이 불가능함. 그래서 이걸 normal world로 빼야 되고, 그러면 root가 그 검사 코드를 건너뛰거나 바꿀 수 있게 됨. TEE가 HSE보다 약한 점은 부채널 공격이 가능하다는 것임.
 
 ## 배경지식
 - [notes/00-trustzone-primer.md](notes/00-trustzone-primer.md) — TrustZone·OP-TEE 개념 프라이머
