@@ -62,13 +62,13 @@ def build():
          'orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#777"/></marker></defs>',
          f'<rect width="{W}" height="{H}" fill="#ffffff"/>',
          text(40, 46, "CA 호출 하나가 secure world 까지 -- Linux TEE 드라이버 경로 (01 secure_mac)", 27, weight="bold"),
-         text(40, 78, "01 writeup 의 EL0 -> EL1 -> EL3 -> S-EL1 -> S-EL0 를 함수 단위로. 소스 추적만 함 (런타임 관측 안 함).",
+         text(40, 78, "실선 = CA 가 일을 시키는 길 (/dev/tee0).  초록 점선 = OP-TEE 가 tee-supplicant 에 심부름 시키는 길 (/dev/teepriv0).  소스 추적만 함.",
               16, C["sub"])]
 
-    lane(o, 100, 180, "EL0  normal 사용자", "CA + libteec", "#f7faff")
+    lane(o, 100, 180, "EL0  normal 사용자", "사용자 공간", "#f7faff")
     lane(o, 295, 395, "EL1  normal 커널", "/dev/tee0 -> TEE 코어 -> OP-TEE 드라이버", "#f3f6fb")
     lane(o, 705, 130, "EL3  TF-A BL31", "secure monitor", "#f6f6f6")
-    lane(o, 850, 245, "S-EL1 / S-EL0", "OP-TEE OS -> TA", "#fffaf0")
+    lane(o, 850, 250, "S-EL1 / S-EL0", "OP-TEE OS -> TA", "#fffaf0")
 
     # EL0
     box(o, 220, 115, 420, 150, "u", "secure_mac CA (host/main.c)", [
@@ -82,6 +82,12 @@ def build():
         "   -> ioctl(TEE_IOC_SHM_REGISTER) (CA 버퍼 등록)",
         "Invoke -> ioctl(TEE_IOC_INVOKE)               :728"])
     o.append(arrow(640, 190, 700, 190))
+    box(o, 1285, 115, 310, 150, "ok", "tee-supplicant (데몬)", [
+        "open /dev/teepriv0",
+        "ioctl(SUPPL_RECV) 대기  :542",
+        "FS(:668) -> /var/lib/tee",
+        "LOAD_TA(:665) -> optee_armtz",
+        "ioctl(SUPPL_SEND) 결과  :559"])
 
     # EL1
     box(o, 220, 360, 400, 130, "k", "tee_core.c  tee_ioctl()", [
@@ -103,32 +109,41 @@ def build():
         " -> optee_shm_register (smc_abi.c:453)",
         "~   물리 페이지 목록 -> OP-TEE"])
     o.append(arrow(620, 425, 660, 425))
-    box(o, 1120, 360, 470, 205, "k", "(c) SMC 루프  smc_abi.c", [
+    box(o, 1120, 360, 470, 215, "k", "(c) SMC 루프  smc_abi.c", [
         "optee_invoke_func (call.c:512)",
         " -> optee_smc_do_call_with_arg   :886",
         "    a0 = OPTEE_SMC_CALL_WITH_(REGD_)ARG",
         "    while: invoke_fn = arm_smccc_smc :1474",
         "      RPC 반환 -> optee_handle_rpc  :951",
-        "~     (tee-supplicant 파일 I/O 등) 다시 SMC",
+        "        -> handle_rpc_supp_cmd (rpc.c:187)",
+        "~       tee-supplicant 처리 후 다시 SMC",
         "      아니면 결과 반환"])
     o.append('<polyline points="560,360 560,342 1300,342" fill="none" stroke="#777" stroke-width="2"/>')
     o.append(arrow(1300, 342, 1300, 360))
     o.append(text(930, 336, "TEE_IOC_INVOKE", 13, C["sub"], anchor="middle"))
 
+    o.append(arrow(1500, 360, 1500, 265, "#2e8b57", dash=True))
+    o.append(arrow(1560, 265, 1560, 360, "#2e8b57", dash=True))
+    o.append(text(1495, 300, "RPC 요청", 13, "#2e8b57", anchor="end"))
+    o.append(text(1565, 300, "결과", 13, "#2e8b57"))
+    o.append(text(1495, 318, "supp.c:85 큐잉", 12, C["sub"], anchor="end"))
+
     # EL3
     box(o, 1120, 720, 470, 100, "m", "opteed_smc_handler (opteed_main.c:608)", [
         "normal EL1 컨텍스트 저장 cm_el1_sysregs_context_save",
         "-> secure 컨텍스트로 ERET (반환 땐 반대)"])
-    o.append(arrow(1355, 565, 1355, 720))
-    o.append(text(1365, 650, "SMC", 14, C["sub"]))
+    o.append(arrow(1355, 575, 1355, 720))
+    o.append(text(1365, 650, "SMC / RPC 반환", 14, C["sub"]))
 
     # S-EL1 / S-EL0
-    box(o, 1120, 870, 470, 170, "s", "OP-TEE OS", [
+    box(o, 1120, 870, 470, 210, "s", "OP-TEE OS", [
         "thread_handle_std_smc",
         "   (thread_optee_smc.c:52)",
         " -> entry_invoke_command (entry_std.c:429)",
         " -> TA 세션 찾아 S-EL0 로 진입",
-        "~memref = (b) 에서 받은 물리 페이지를 매핑"])
+        "~memref = (b) 에서 받은 물리 페이지를 매핑",
+        "!파일 필요 -> thread_rpc_cmd (tee_fs_rpc.c:45)",
+        "!  -> RPC 로 반환 (암호화/해시는 여기서 끝냄)"])
     o.append(arrow(1355, 820, 1355, 870))
     box(o, 560, 870, 500, 170, "s", "secure_mac TA (S-EL0)", [
         "TA_InvokeCommandEntryPoint",
@@ -143,8 +158,8 @@ def build():
         "    -> TEE 혼자 root 를 못 막음",
         "공유 메모리: pin 은 위치만 고정,",
         "    내용 변경은 못 막음 -> TA 가 복사",
-        "S1-S3: 저장 I/O 는 (c) RPC 로",
-        "    tee-supplicant 가 대행"], mono=False)
+        "S1-S3: 저장 I/O 는 (c) RPC 로 tee-supplicant 가",
+        "    대행 -> 암호문만 다룸, 롤백은 root 손안"], mono=False)
 
     o.append(text(40, 1130, "근거: libteec tee_client_api.c, linux drivers/tee/{tee_core.c, tee_shm.c, optee/call.c, optee/smc_abi.c}, "
                   "TF-A services/spd/opteed/opteed_main.c,", 14, C["sub"]))

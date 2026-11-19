@@ -2,17 +2,17 @@
 <defs><marker id="ah" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#777"/></marker></defs>
 <rect width="1640" height="1200" fill="#ffffff"/>
 <text x="40" y="46" font-family="NanumGothic, sans-serif" font-size="27" fill="#1d1d1f" font-weight="bold" text-anchor="start">CA 호출 하나가 secure world 까지 -- Linux TEE 드라이버 경로 (01 secure_mac)</text>
-<text x="40" y="78" font-family="NanumGothic, sans-serif" font-size="16" fill="#555555" font-weight="normal" text-anchor="start">01 writeup 의 EL0 -&gt; EL1 -&gt; EL3 -&gt; S-EL1 -&gt; S-EL0 를 함수 단위로. 소스 추적만 함 (런타임 관측 안 함).</text>
+<text x="40" y="78" font-family="NanumGothic, sans-serif" font-size="16" fill="#555555" font-weight="normal" text-anchor="start">실선 = CA 가 일을 시키는 길 (/dev/tee0).  초록 점선 = OP-TEE 가 tee-supplicant 에 심부름 시키는 길 (/dev/teepriv0).  소스 추적만 함.</text>
 <rect x="30" y="100" width="1580" height="180" rx="10" fill="#f7faff" stroke="#cccccc" stroke-width="1"/>
 <text x="48" y="128" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">EL0  normal 사용자</text>
-<text x="48" y="150" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">CA + libteec</text>
+<text x="48" y="150" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">사용자 공간</text>
 <rect x="30" y="295" width="1580" height="395" rx="10" fill="#f3f6fb" stroke="#cccccc" stroke-width="1"/>
 <text x="48" y="323" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">EL1  normal 커널</text>
 <text x="48" y="345" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">/dev/tee0 -&gt; TEE 코어 -&gt; OP-TEE 드라이버</text>
 <rect x="30" y="705" width="1580" height="130" rx="10" fill="#f6f6f6" stroke="#cccccc" stroke-width="1"/>
 <text x="48" y="733" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">EL3  TF-A BL31</text>
 <text x="48" y="755" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">secure monitor</text>
-<rect x="30" y="850" width="1580" height="245" rx="10" fill="#fffaf0" stroke="#cccccc" stroke-width="1"/>
+<rect x="30" y="850" width="1580" height="250" rx="10" fill="#fffaf0" stroke="#cccccc" stroke-width="1"/>
 <text x="48" y="878" font-family="NanumGothic, sans-serif" font-size="18" fill="#1d1d1f" font-weight="bold" text-anchor="start">S-EL1 / S-EL0</text>
 <text x="48" y="900" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">OP-TEE OS -&gt; TA</text>
 <rect x="220" y="115" width="420" height="150" rx="8" fill="#e8f0fb" stroke="#3b6fb6" stroke-width="2"/>
@@ -28,6 +28,13 @@
 <text x="712" y="205" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">   -&gt; ioctl(TEE_IOC_SHM_REGISTER) (CA 버퍼 등록)</text>
 <text x="712" y="226" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">Invoke -&gt; ioctl(TEE_IOC_INVOKE)               :728</text>
 <line x1="640" y1="190" x2="700" y2="190" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1285" y="115" width="310" height="150" rx="8" fill="#e7f5ec" stroke="#2e8b57" stroke-width="2"/>
+<text x="1297" y="139" font-family="NanumGothic, sans-serif" font-size="16" fill="#2e8b57" font-weight="bold" text-anchor="start">tee-supplicant (데몬)</text>
+<text x="1297" y="163" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">open /dev/teepriv0</text>
+<text x="1297" y="184" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">ioctl(SUPPL_RECV) 대기  :542</text>
+<text x="1297" y="205" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">FS(:668) -&gt; /var/lib/tee</text>
+<text x="1297" y="226" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">LOAD_TA(:665) -&gt; optee_armtz</text>
+<text x="1297" y="247" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">ioctl(SUPPL_SEND) 결과  :559</text>
 <rect x="220" y="360" width="400" height="130" rx="8" fill="#eef3fb" stroke="#24508f" stroke-width="2"/>
 <text x="232" y="384" font-family="NanumGothic, sans-serif" font-size="16" fill="#24508f" font-weight="bold" text-anchor="start">tee_core.c  tee_ioctl()</text>
 <text x="232" y="408" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">case TEE_IOC_OPEN_SESSION   :980</text>
@@ -50,31 +57,39 @@
 <text x="672" y="471" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start"> -&gt; optee_shm_register (smc_abi.c:453)</text>
 <text x="672" y="492" font-family="NanumGothicCoding, monospace" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">   물리 페이지 목록 -&gt; OP-TEE</text>
 <line x1="620" y1="425" x2="660" y2="425" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
-<rect x="1120" y="360" width="470" height="205" rx="8" fill="#eef3fb" stroke="#24508f" stroke-width="2"/>
+<rect x="1120" y="360" width="470" height="215" rx="8" fill="#eef3fb" stroke="#24508f" stroke-width="2"/>
 <text x="1132" y="384" font-family="NanumGothic, sans-serif" font-size="16" fill="#24508f" font-weight="bold" text-anchor="start">(c) SMC 루프  smc_abi.c</text>
 <text x="1132" y="408" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">optee_invoke_func (call.c:512)</text>
 <text x="1132" y="429" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start"> -&gt; optee_smc_do_call_with_arg   :886</text>
 <text x="1132" y="450" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">    a0 = OPTEE_SMC_CALL_WITH_(REGD_)ARG</text>
 <text x="1132" y="471" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">    while: invoke_fn = arm_smccc_smc :1474</text>
 <text x="1132" y="492" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">      RPC 반환 -&gt; optee_handle_rpc  :951</text>
-<text x="1132" y="513" font-family="NanumGothicCoding, monospace" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">     (tee-supplicant 파일 I/O 등) 다시 SMC</text>
-<text x="1132" y="534" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">      아니면 결과 반환</text>
+<text x="1132" y="513" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">        -&gt; handle_rpc_supp_cmd (rpc.c:187)</text>
+<text x="1132" y="534" font-family="NanumGothicCoding, monospace" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">       tee-supplicant 처리 후 다시 SMC</text>
+<text x="1132" y="555" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">      아니면 결과 반환</text>
 <polyline points="560,360 560,342 1300,342" fill="none" stroke="#777" stroke-width="2"/>
 <line x1="1300" y1="342" x2="1300" y2="360" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
 <text x="930" y="336" font-family="NanumGothic, sans-serif" font-size="13" fill="#555555" font-weight="normal" text-anchor="middle">TEE_IOC_INVOKE</text>
+<line x1="1500" y1="360" x2="1500" y2="265" stroke="#2e8b57" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#ah)"/>
+<line x1="1560" y1="265" x2="1560" y2="360" stroke="#2e8b57" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#ah)"/>
+<text x="1495" y="300" font-family="NanumGothic, sans-serif" font-size="13" fill="#2e8b57" font-weight="normal" text-anchor="end">RPC 요청</text>
+<text x="1565" y="300" font-family="NanumGothic, sans-serif" font-size="13" fill="#2e8b57" font-weight="normal" text-anchor="start">결과</text>
+<text x="1495" y="318" font-family="NanumGothic, sans-serif" font-size="12" fill="#555555" font-weight="normal" text-anchor="end">supp.c:85 큐잉</text>
 <rect x="1120" y="720" width="470" height="100" rx="8" fill="#f2f2f2" stroke="#666666" stroke-width="2"/>
 <text x="1132" y="744" font-family="NanumGothic, sans-serif" font-size="16" fill="#666666" font-weight="bold" text-anchor="start">opteed_smc_handler (opteed_main.c:608)</text>
 <text x="1132" y="768" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">normal EL1 컨텍스트 저장 cm_el1_sysregs_context_save</text>
 <text x="1132" y="789" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">-&gt; secure 컨텍스트로 ERET (반환 땐 반대)</text>
-<line x1="1355" y1="565" x2="1355" y2="720" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
-<text x="1365" y="650" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">SMC</text>
-<rect x="1120" y="870" width="470" height="170" rx="8" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
+<line x1="1355" y1="575" x2="1355" y2="720" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
+<text x="1365" y="650" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">SMC / RPC 반환</text>
+<rect x="1120" y="870" width="470" height="210" rx="8" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
 <text x="1132" y="894" font-family="NanumGothic, sans-serif" font-size="16" fill="#c98a00" font-weight="bold" text-anchor="start">OP-TEE OS</text>
 <text x="1132" y="918" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">thread_handle_std_smc</text>
 <text x="1132" y="939" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">   (thread_optee_smc.c:52)</text>
 <text x="1132" y="960" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start"> -&gt; entry_invoke_command (entry_std.c:429)</text>
 <text x="1132" y="981" font-family="NanumGothicCoding, monospace" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start"> -&gt; TA 세션 찾아 S-EL0 로 진입</text>
 <text x="1132" y="1002" font-family="NanumGothicCoding, monospace" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">memref = (b) 에서 받은 물리 페이지를 매핑</text>
+<text x="1132" y="1023" font-family="NanumGothicCoding, monospace" font-size="14" fill="#c0392b" font-weight="normal" text-anchor="start">파일 필요 -&gt; thread_rpc_cmd (tee_fs_rpc.c:45)</text>
+<text x="1132" y="1044" font-family="NanumGothicCoding, monospace" font-size="14" fill="#c0392b" font-weight="normal" text-anchor="start">  -&gt; RPC 로 반환 (암호화/해시는 여기서 끝냄)</text>
 <line x1="1355" y1="820" x2="1355" y2="870" stroke="#777777" stroke-width="2" marker-end="url(#ah)"/>
 <rect x="560" y="870" width="500" height="170" rx="8" fill="#fff6e5" stroke="#c98a00" stroke-width="2"/>
 <text x="572" y="894" font-family="NanumGothic, sans-serif" font-size="16" fill="#c98a00" font-weight="bold" text-anchor="start">secure_mac TA (S-EL0)</text>
@@ -90,8 +105,8 @@
 <text x="52" y="984" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">    -&gt; TEE 혼자 root 를 못 막음</text>
 <text x="52" y="1005" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">공유 메모리: pin 은 위치만 고정,</text>
 <text x="52" y="1026" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">    내용 변경은 못 막음 -&gt; TA 가 복사</text>
-<text x="52" y="1047" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">S1-S3: 저장 I/O 는 (c) RPC 로</text>
-<text x="52" y="1068" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">    tee-supplicant 가 대행</text>
+<text x="52" y="1047" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">S1-S3: 저장 I/O 는 (c) RPC 로 tee-supplicant 가</text>
+<text x="52" y="1068" font-family="NanumGothic, sans-serif" font-size="14" fill="#1d1d1f" font-weight="normal" text-anchor="start">    대행 -&gt; 암호문만 다룸, 롤백은 root 손안</text>
 <text x="40" y="1130" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">근거: libteec tee_client_api.c, linux drivers/tee/{tee_core.c, tee_shm.c, optee/call.c, optee/smc_abi.c}, TF-A services/spd/opteed/opteed_main.c,</text>
 <text x="40" y="1152" font-family="NanumGothic, sans-serif" font-size="14" fill="#555555" font-weight="normal" text-anchor="start">      optee_os core/arch/arm/kernel/thread_optee_smc.c, core/tee/entry_std.c (줄 번호는 이 리포 optee/ 트리 기준, 2026-11-19)</text>
 </svg>
