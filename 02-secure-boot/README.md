@@ -6,7 +6,7 @@
 - [x] U-Boot **FIT verified boot** — 커널+dtb를 서명하고 U-Boot가 검증 (셸 우회 확인은 남음)
 - [x] **TF-A 인증 부팅체인**(BL1→BL2 이미지 인증) -- `make arm-tf TF_A_TRUSTED_BOARD_BOOT=y`
 - [x] 공격 데모: 서명 바이트 flip → "부팅 거부" 확인 (규칙 3) -- 아래 [A][B][C]
-- [ ] writeup + "왜": FIT verified boot vs UEFI Secure Boot
+- [x] writeup + "왜": FIT verified boot vs UEFI Secure Boot -- [notes/writeup.md](notes/writeup.md), 아래 "왜 FIT인가" 절
 
 ## 위협모델 (← 내가 작성)
 > - 무엇을 지키나 (자산): 이미지(무결성) -- bl2, bl31(tf-a), bl32(op-tee), bl33(u-boot), 커널이미지. 그리고 서명용 비밀키(기밀성, 개발사 보관), fit 서명용 비밀키
@@ -92,6 +92,22 @@ bootcmd 실패 -> 셸, autoboot 중 키 입력 -> 셸이고, 셸의 booti 는 �
 - `BOOTDELAY=-2` -- autoboot 중단 검사 안 함
 - `ENV_IS_NOWHERE` -- 플래시 env 의 bootcmd 를 공격자가 바꾸는 길 차단 (원래 `Loading Environment from Flash`)
 - `CMD_BOOTZ/GO/BOOTEFI` 제거 (심층 방어). `booti` 는 못 뺌: arm64 bootm 이 `booti_setup()` 을 씀 (`boot/bootm.c:676`) -> 셸 차단이 유일한 방어선
+
+## 왜 FIT인가 (FIT verified boot vs UEFI Secure Boot)
+
+| | FIT verified boot (U-Boot) | UEFI Secure Boot |
+|---|---|---|
+| 검증하는 쪽 | U-Boot | UEFI 펌웨어 |
+| 검증 대상 | FIT 안 kernel/dtb/ramdisk 조합 (conf 서명) | EFI 실행 파일(shim, grub, 커널 EFI stub) Authenticode 서명 |
+| 공개키 위치 | U-Boot dtb 에 빌드 때 박음 (앞 단계 해시가 보호) | NV 변수 PK / KEK / db, 서명된 업데이트로 운영 중 교체 |
+| 폐기 | 기본 기능 없음, 키 교체 = U-Boot 재빌드 | dbx(차단 목록), SBAT |
+| 생태계 | 한 회사가 이미지와 키를 모두 통제 | 여러 벤더, MS CA 가 shim 서명 |
+| 주 사용처 | 임베디드, ARM 보드, ECU | PC, 서버, 일부 고성능 차량 컴퓨터 |
+
+(FIT 열은 이 실습에서 확인, UEFI 열은 일반 정리 -- 돌려보지 않음)
+
+내 결론:
+FIT 서명키가 유출이 되면 U-Boot 재빌드와 옛 버전으로 못 들어가게 NV 카운터 올리기까지 반영을 해야 됨. UEFI의 경우는 키 차단 목록에 추가를 통해서 폐기를 해야 됨. 차량 ECU가 FIT와 같은 방법을 많이 쓰는 이유는 이미지와 키를 모두 한 회사가 통제할 수 있으니까.
 
 ## 연결
 - 01의 TEE는 **이 부팅체인만큼만 신뢰**된다. 04의 HSM 키로 여기 이미지를 서명하면 02↔04 연결.
