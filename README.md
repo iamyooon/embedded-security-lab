@@ -14,10 +14,10 @@
 | [01](01-optee-qemu/) | **TEE — OP-TEE on QEMU** | 직접 만든 Trusted Application(TA) + 호스트앱, world-switch 이해 | 완료 (2026-11-19) |
 | [02](02-secure-boot/) | **Secure Boot** | U-Boot FIT verified boot → TF-A 인증체인, "변조→부팅거부" 데모 | 완료 (2026-11-19) |
 | [03](03-measured-boot/) | **Measured Boot** | swtpm PCR 측정·sealing·기초 attestation | 계획 |
-| [04](04-hsm-pkcs11/) | **HSM** | SoftHSM + PKCS#11, 키는 HSM 안·서명만 밖으로 | 계획 |
+| [04](04-hsm-pkcs11/) | **HSM** | SoftHSM + PKCS#11, 키는 HSM 안·서명만 밖으로 | 완료 (2026-11-19) |
 | [05](05-real-board/) | **리얼보드** | 하드웨어 root of trust (NXP i.MX8 / STM32MP1) | 계획 |
 
-## 핵심 결과 (01, 02)
+## 핵심 결과 (01, 02, 04)
 | 실험 | 결과 | 근거 |
 |------|------|------|
 | TA 키 반출 요청 (EXPORT_KEY) | OP-TEE 코어가 거부, TA panic -> 키 안 나감 | [01 README](01-optee-qemu/README.md) |
@@ -27,8 +27,11 @@
 | TF-A TBB [A] 이미지 / [B] 서명 / [C] 공격자 키 | 셋 다 부팅 거부, VERBOSE 원인 줄로 구분 | [02 README](02-secure-boot/README.md), [인증서 체인](02-secure-boot/notes/cert-chain.png) |
 | U-Boot FIT [D] 커널 변조 | 해시 불일치로 거부 | [FIT 체인](02-secure-boot/notes/fit-chain.png) |
 | [E] 검증 실패 후 셸 -> booti 우회 | 무서명 커널 부팅됨 -> 하드닝 후 셸 차단 [E'] | [02 README](02-secure-boot/README.md) |
+| [H1] PKCS#11 API 로 개인키 요청 (PIN 로그인 상태) | CKR_ATTRIBUTE_SENSITIVE 로 거부 (키 속성) | [04 README](04-hsm-pkcs11/README.md) |
+| [H2] root 가 서명 중 메모리 덤프 | SoftHSM 은 p, q 복원됨 (앱 프로세스 안 라이브러리) -> 실물 HSM 필요 이유 | [그림](04-hsm-pkcs11/notes/hsm-lab.png) |
+| [F1][F2] 02 FIT 를 SoftHSM 키로 서명 | 새 공개키 U-Boot 부팅 OK / 옛 키 U-Boot 거부 | [04 README](04-hsm-pkcs11/README.md) |
 
-내 말로 쓴 설명: [01 writeup](01-optee-qemu/notes/writeup.md), [02 writeup](02-secure-boot/notes/writeup.md)
+내 말로 쓴 설명: [01 writeup](01-optee-qemu/notes/writeup.md), [02 writeup](02-secure-boot/notes/writeup.md), [04 writeup](04-hsm-pkcs11/notes/writeup.md)
 
 ## 학습 방식
 작업 규칙(역할 분담·설명먼저·부수기·설명백 등)은 [LEARNING.md](LEARNING.md) 참고.

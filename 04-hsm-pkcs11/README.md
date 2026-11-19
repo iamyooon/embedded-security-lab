@@ -6,7 +6,7 @@
 - [x] SoftHSM 토큰 생성, 키 쌍을 HSM 안에 생성(추출 불가 플래그)
 - [x] PKCS#11로 서명 — 개인키를 앱이 못 읽음을 확인(규칙 3)
 - [x] 02의 FIT 이미지를 **SoftHSM 키로 서명** → 02↔04 연결
-- [ ] writeup + "왜": HSM vs TEE vs TPM 역할 분담
+- [x] writeup ([notes/writeup.md](notes/writeup.md)) + "왜": 서명 키 보관 방식 비교 (HSM vs TEE vs TPM 은 [01](../01-optee-qemu/README.md) 에서 함)
 - [ ] (선택) YubiHSM 2 / 클라우드 HSM(AWS CloudHSM)로 실물 확장
 
 ## 위협모델 (← 내가 작성)
@@ -41,4 +41,19 @@
 - 오프라인 검증도 같은 결과: `fit_check_sign -k ctrl-hsm.dtb` OK, `-k ctrl.dtb`(fitdev) `Signature check bad`.
 - 한계: PIN 을 명령줄 URI 에 넣음 -> `ps` 로 보임. 빌드 서버 root 는 이 PIN 으로 `C_Sign` 을 불러 아무 itb 에나 서명 가능(오용). 실습 편의이고, 실제는 서명 서버 분리 / m-of-n 승인 / 로그(일반론, 미확인).
 - 토큰 저장소 `optee/out/fit/hsm-tokens`, 02 산출물 백업 `optee/out/fit/bak-02` (둘 다 git 제외).
+
+## 왜 HSM인가 (서명 키 보관 방식 비교)
+
+| | 파일 키 (02) | SoftHSM (04) | 실물 HSM (USB/네트워크) | 클라우드 KMS/HSM |
+|---|---|---|---|---|
+| 개인키가 있는 곳 | 빌드 서버 디스크 평문 파일 | 디스크에 PIN 기반 암호화, 서명 때 앱 메모리로 복호 | HSM 칩 안, 밖으로 안 나옴 | 클라우드 업체의 HSM 안 |
+| 서명 연산 위치 | 앱 프로세스 | 앱 프로세스 (라이브러리) | HSM 칩 | 클라우드 (API 호출) |
+| 서버 root 가 키를 훔치나 | 파일 복사로 가능 | 가능 ([H2] 메모리 덤프) | 불가 | 불가 |
+| 서버 root 가 서명을 시키나 | 가능 | 가능 (PIN) | 가능 (PIN) | 가능 (자격증명), 단 IAM 정책과 감사 로그가 남음 |
+| 비용 / 용도 | 0 / 개발 | 0 / 개발, CI 테스트 | 장비 비용 / 출시 키, 루트 키 | 사용량 과금 / CI 서명 서버 |
+
+(파일 키, SoftHSM 열은 이 실습에서 확인, 실물 HSM, 클라우드 열은 일반 정리 -- 돌려보지 않음)
+
+내 결론:
+자주서명하는 키는 서명서버, 루트 키는 실물 hsm으로 할듯. HSM을 쓰는 의미는 키를 유출하지 않도록 관리하는것이고 피해기간이 침입기간으로 제한된다.
 
